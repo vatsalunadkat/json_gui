@@ -200,14 +200,19 @@ class JSONEditor(tk.Tk):
             font=("Segoe UI", 12, "bold")
         ).pack(anchor="w", pady=(0, 10), padx=5)
         
-        # Build form with recursion
-        self._build_form_recursive(obj)
+        # Container for the grid form
+        self.form_frame = ttk.Frame(self.scrollable_frame)
+        self.form_frame.pack(fill=tk.X, expand=True)
+        self.form_frame.columnconfigure(1, weight=1) # Make entry column expandable
+        
+        # Build form with recursion using Grid
+        self._build_form_recursive(obj, row_index=0)
         
         # Update Nav Controls
         self.lbl_status.config(text=f"Object {self.current_index + 1} of {len(self.data)}")
         
         state_prev = "disabled" if self.current_index <= 0 else "!disabled"
-        state_next = "disabled" if self.current_index >= len(self.data) -1 else "!disabled"
+        state_next = "disabled" if self.current_index >= len(self.data) - 1 else "!disabled"
         
         self.btn_prev.state([state_prev])
         self.btn_next.state([state_next])
@@ -215,36 +220,33 @@ class JSONEditor(tk.Tk):
         # Initial preview update
         self.update_json_preview()
 
-    def _build_form_recursive(self, current_data, path_ids=None, depth=0):
+    def _build_form_recursive(self, current_data, path_ids=None, depth=0, row_index=0):
         if path_ids is None:
             path_ids = []
             
         for key, value in current_data.items():
             current_path = path_ids + [key]
-            # Indentation
             indent_px = depth * 20
             
             if isinstance(value, dict):
                  # Header for object
-                frame = ttk.Frame(self.scrollable_frame)
-                frame.pack(fill=tk.X, pady=2, padx=(indent_px, 0))
-                
                 ttk.Label(
-                    frame, 
+                    self.form_frame, 
                     text=f"{key} {{}}", 
                     font=("Segoe UI", 9, "bold")
-                ).pack(anchor="w")
+                ).grid(row=row_index, column=0, sticky="w", padx=(indent_px, 5), pady=2)
                 
-                self._build_form_recursive(value, current_path, depth + 1)
+                row_index += 1
+                row_index = self._build_form_recursive(value, current_path, depth + 1, row_index)
             else:
-                self._create_field_v2(key, value, current_path, indent_px)
+                self._create_field_v2(key, value, current_path, indent_px, row_index)
+                row_index += 1
+        return row_index
     
-    def _create_field_v2(self, key, value, path_keys, indent_px):
-        frame = ttk.Frame(self.scrollable_frame)
-        frame.pack(fill=tk.X, pady=1, padx=(indent_px, 5))
-        
-        lbl = ttk.Label(frame, text=key, width=30, anchor="w")
-        lbl.pack(side=tk.LEFT)
+    def _create_field_v2(self, key, value, path_keys, indent_px, row_index):
+        # Auto-width label using grid column sizing
+        lbl = ttk.Label(self.form_frame, text=key, anchor="w")
+        lbl.grid(row=row_index, column=0, sticky="w", padx=(indent_px, 5), pady=1)
         
         var = tk.StringVar(value=str(value)) # Convert all to string for Entry
         
@@ -252,11 +254,10 @@ class JSONEditor(tk.Tk):
         var.trace_add("write", lambda *args: self.on_field_change())
 
         state = "normal"
-        if key == "id":
-            state = "readonly"
+        # Removed ID readonly check as per user request
             
-        entry = ttk.Entry(frame, textvariable=var, state=state)
-        entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        entry = ttk.Entry(self.form_frame, textvariable=var, state=state)
+        entry.grid(row=row_index, column=1, sticky="ew", padx=(0, 5), pady=1)
         
         self.entry_map[tuple(path_keys)] = (var, type(value))
 
@@ -351,6 +352,7 @@ class JSONEditor(tk.Tk):
             try:
                 with open(self.filepath, 'w', encoding='utf-8') as f:
                     json.dump(self.data, f, indent=2)
+                    f.write('\n') # Ensure trailing newline
                 messagebox.showinfo("Success", "File saved successfully!")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save file: {str(e)}")
