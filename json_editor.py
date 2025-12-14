@@ -112,6 +112,16 @@ class JSONEditor(ctk.CTk):
                                          fg_color=("#6B6B6B", "#4A4A4A"), hover_color=("#5A5A5A", "#5A5A5A"))
         self.btn_reload.pack(side="left", padx=3)
         
+        self.btn_add_object = ctk.CTkButton(self.nav_right, text="➕ Add Object", command=self.add_new_object, 
+                                            width=110, height=32, corner_radius=6,
+                                            fg_color=("#8B4513", "#A0522D"), hover_color=("#654321", "#8B4513"))
+        self.btn_add_object.pack(side="left", padx=3)
+        
+        self.btn_copy_last = ctk.CTkButton(self.nav_right, text="📋 Copy Last", command=self.copy_last_object, 
+                                            width=110, height=32, corner_radius=6,
+                                            fg_color=("#6B4C9A", "#9370DB"), hover_color=("#553D7F", "#7B68EE"))
+        self.btn_copy_last.pack(side="left", padx=3)
+        
         self.btn_save = ctk.CTkButton(self.nav_right, text="💾 Save", command=self.save_changes, 
                                        width=90, height=32, corner_radius=6,
                                        fg_color=("#107C10", "#0F7B0F"), hover_color=("#0D5E0D", "#0E6A0E"))
@@ -232,6 +242,27 @@ class JSONEditor(ctk.CTk):
 
         obj = self.data[self.current_index]
         
+        # Header with Add button for root level
+        header_container = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent", height=40)
+        header_container.pack(fill="x", padx=10, pady=(5, 10))
+        
+        ctk.CTkLabel(
+            header_container,
+            text=f"Object {self.current_index + 1}",
+            font=("Segoe UI", 14, "bold")
+        ).pack(side="left")
+        
+        ctk.CTkButton(
+            header_container,
+            text="+ Add Property",
+            width=120,
+            height=28,
+            fg_color=("#107C10", "#0F7B0F"),
+            hover_color=("#0D5E0D", "#0E6A0E"),
+            font=("Segoe UI", 10),
+            command=lambda: self.add_property_to_object([])
+        ).pack(side="left", padx=15)
+        
         # Container for the grid form
         self.form_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="transparent")
         self.form_frame.pack(fill="both", expand=True, padx=10, pady=5)
@@ -320,6 +351,19 @@ class JSONEditor(ctk.CTk):
                     anchor="w"
                 )
                 header_label.place(x=indent_px + 28, y=6)
+                
+                # Add property button for nested objects
+                btn_add_prop = ctk.CTkButton(
+                    header_container,
+                    text="+",
+                    width=20,
+                    height=24,
+                    fg_color=("#107C10", "#0F7B0F"),
+                    hover_color=("#0D5E0D", "#0E6A0E"),
+                    font=("Segoe UI", 12, "bold"),
+                    command=lambda cp=current_path: self.add_property_to_object(cp)
+                )
+                btn_add_prop.place(x=indent_px + 28 + len(key) * 8 + 30, y=4)
                 
                 row_index += 1
                 
@@ -489,6 +533,138 @@ class JSONEditor(ctk.CTk):
                 messagebox.showinfo("Reloaded", "File reloaded from disk.")
             except Exception as e:
                  messagebox.showerror("Error", f"Failed to reload: {str(e)}")
+
+    def add_new_object(self):
+        """Add a new object to the array"""
+        if not self.data:
+            messagebox.showwarning("No File", "Please load a JSON file first.")
+            return
+        
+        # Create a simple dialog to get the new object structure
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Add New Object")
+        dialog.geometry("450x280")
+        dialog.transient(self)
+        dialog.grab_set()
+        dialog.resizable(False, False)
+        
+        ctk.CTkLabel(dialog, text="Enter property name:", font=("Segoe UI", 12)).pack(pady=(20, 5))
+        key_entry = ctk.CTkEntry(dialog, width=300)
+        key_entry.pack(pady=5)
+        
+        ctk.CTkLabel(dialog, text="Enter property value:", font=("Segoe UI", 12)).pack(pady=(10, 5))
+        value_entry = ctk.CTkEntry(dialog, width=300)
+        value_entry.pack(pady=5)
+        
+        def add_object():
+            key = key_entry.get().strip()
+            value = value_entry.get().strip()
+            
+            if not key:
+                messagebox.showwarning("Invalid Input", "Property name cannot be empty.")
+                return
+            
+            # Try to parse value as JSON, otherwise treat as string
+            try:
+                parsed_value = json.loads(value)
+            except:
+                parsed_value = value
+            
+            # Create new object with the property
+            new_obj = {key: parsed_value}
+            self.data.append(new_obj)
+            
+            # Navigate to the new object
+            self.current_index = len(self.data) - 1
+            self.display_current_object()
+            dialog.destroy()
+        btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        btn_frame.pack(pady=20, side="bottom")
+        
+        ctk.CTkButton(btn_frame, text="Add", command=add_object, width=120, height=35,
+                      fg_color=("#107C10", "#0F7B0F"), hover_color=("#0D5E0D", "#0E6A0E")).pack(side="left", padx=10)
+        ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=120, height=35,
+                      fg_color=("#6B6B6B", "#4A4A4A"), hover_color=("#5A5A5A", "#5A5A5A")).pack(side="left", padx=10)
+
+    def copy_last_object(self):
+        """Create a copy of the last object in the array"""
+        if not self.data:
+            messagebox.showwarning("No File", "Please load a JSON file first.")
+            return
+        
+        if len(self.data) == 0:
+            messagebox.showwarning("Empty Array", "No objects to copy.")
+            return
+        
+        # Deep copy the last object to avoid reference issues
+        import copy
+        last_object = copy.deepcopy(self.data[-1])
+        self.data.append(last_object)
+        
+        # Navigate to the new copied object
+        self.current_index = len(self.data) - 1
+        self.display_current_object()
+        messagebox.showinfo("Success", f"Copied object {len(self.data) - 1} to create object {len(self.data)}")
+
+    def add_property_to_object(self, path_keys):
+        """Add a new property to an existing object"""
+        # Create dialog
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Add Property")
+        dialog.geometry("500x300")
+        dialog.transient(self)
+        dialog.grab_set()
+        dialog.resizable(False, False)
+        
+        ctk.CTkLabel(dialog, text=f"Add property to: {' → '.join(str(k) for k in path_keys)}", 
+                     font=("Segoe UI", 12, "bold")).pack(pady=(20, 10))
+        
+        ctk.CTkLabel(dialog, text="Property name:", font=("Segoe UI", 11)).pack(pady=(10, 5))
+        key_entry = ctk.CTkEntry(dialog, width=400)
+        key_entry.pack(pady=5)
+        
+        ctk.CTkLabel(dialog, text="Property value (or type 'object' for nested object):", 
+                     font=("Segoe UI", 11)).pack(pady=(10, 5))
+        value_entry = ctk.CTkEntry(dialog, width=400)
+        value_entry.pack(pady=5)
+        
+        def add_property():
+            key = key_entry.get().strip()
+            value = value_entry.get().strip()
+            
+            if not key:
+                messagebox.showwarning("Invalid Input", "Property name cannot be empty.")
+                return
+            
+            # Navigate to the target object
+            obj = self.data[self.current_index]
+            for k in path_keys:
+                obj = obj[k]
+            
+            # Check if key already exists
+            if key in obj:
+                if not messagebox.askyesno("Confirm", f"Property '{key}' already exists. Overwrite?"):
+                    return
+            
+            # Parse value
+            if value.lower() == 'object':
+                obj[key] = {}
+            else:
+                try:
+                    obj[key] = json.loads(value)
+                except:
+                    obj[key] = value
+            
+            self.display_current_object()
+            dialog.destroy()
+        
+        btn_frame = ctk.CTkFrame(dialog, fg_color="transparent")
+        btn_frame.pack(pady=20, side="bottom")
+        
+        ctk.CTkButton(btn_frame, text="Add", command=add_property, width=120, height=35,
+                      fg_color=("#107C10", "#0F7B0F"), hover_color=("#0D5E0D", "#0E6A0E")).pack(side="left", padx=10)
+        ctk.CTkButton(btn_frame, text="Cancel", command=dialog.destroy, width=120, height=35,
+                      fg_color=("#6B6B6B", "#4A4A4A"), hover_color=("#5A5A5A", "#5A5A5A")).pack(side="left", padx=10)
 
 if __name__ == "__main__":
     app = JSONEditor()
