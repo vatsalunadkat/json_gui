@@ -1,99 +1,52 @@
 # JSON Object Editor (Joe)
 
-A modern, elegant web-based JSON editor for editing JSON files containing **arrays of objects**. Features a beautiful Material Design 3 inspired interface, VS Code-style visual hierarchy, and an innovative object-by-object editing approach with smart array visualization.
+A web-based JSON editor designed for files containing arrays of objects. Simplifies editing large datasets through object-by-object navigation and an intuitive split-pane interface.
 
-🌐 **[Launch Joe in Your Browser](https://vatsalunadkat.github.io/json_gui/)** - No installation required!
-
-**Available in two versions:**
-
-- 🌐 **Web App** (Primary) - HTML/CSS/JavaScript - runs in any modern browser
-- 🖥️ **Python App** (Backup) - offline desktop version for when you need local-only editing
+**[Launch Web App](https://vatsalunadkat.github.io/json_gui/)** | No installation required
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)
 ![HTML5](https://img.shields.io/badge/HTML5-Web%20App-orange.svg)
+![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
+![CustomTkinter](https://img.shields.io/badge/CustomTkinter-5.2+-green.svg)
 
----
+## Overview
 
-## 📸 Visual Highlights
+Joe addresses the challenge of editing JSON files with large arrays of similar objects (configs, database exports, API responses). Instead of overwhelming you with hundreds of nested entries, it presents one object at a time with form-based editing.
 
-### Object-by-Object Editing
+**Available Versions:**
+- **Web App** - Browser-based, no installation needed
+- **Desktop App** - Python/CustomTkinter for direct file editing
 
-Navigate through large JSON arrays one object at a time with clear position tracking and easy Previous/Next navigation.
+## Key Features
 
-### Smart Tag-Style Arrays
+### Object-by-Object Navigation
 
-Primitive arrays display as horizontal, editable tags with click-to-add and hover-to-delete functionality - no more quote hell!
+Navigate large arrays one object at a time using Previous/Next buttons with position tracking ("Object X of Y"). Edit individual entries without visual clutter from the entire file structure.
 
-### VS Code-Style Visual Hierarchy
+### Tag-Style Array Editing
 
-Color-coded vertical indentation guides (Gold → Purple → Blue) make deeply nested structures easy to understand at a glance.
-
-### Material Design 3 Interface
-
-Beautiful pastel buttons, smooth animations, and seamless dark/light theme switching for a modern editing experience.
-
----
-
-## 🎯 Core Features
-
-### Object-by-Object Editing (Our Signature Feature!)
-
-Unlike traditional JSON editors that show the entire file structure, **Joe** focuses on **one object at a time**:
-
-- 📋 **Clean, Focused Editing** - Edit individual objects without distraction from hundreds of other entries
-- 🎯 **Perfect for Large Arrays** - Navigate through arrays of 10, 100, or 1000+ objects with ease
-- ⬅️➡️ **Intuitive Navigation** - Simple Previous/Next buttons to move between objects
-- 📍 **Position Tracking** - Always know where you are with "Object X of Y" counter
-- 🔄 **Auto-sync Preview** - See the complete JSON structure updating live in the right pane
-
-**Why This Matters:**  
-When working with JSON files containing arrays of similar objects (configs, database exports, API responses), traditional editors become overwhelming. Our object-by-object approach makes editing **100+ objects** as easy as editing 5.
-
-### Smart Tag-Style Array Display (Unique Innovation!)
-
-Property values that are **primitive arrays** (lists of strings, numbers, or booleans) are displayed in a revolutionary **horizontal tag format**:
-
-- 🏷️ **Horizontal Tag Layout** - Arrays like `["google", "facebook", "email"]` display as editable tags side-by-side
-- ➕ **Click-to-Add** - Add new items with a single click on the "+" button
-- ❌ **Hover-to-Delete** - Remove items by hovering and clicking the "×" button
-- 📏 **Auto-sizing Inputs** - Each tag automatically adjusts width based on content
-- 🎨 **Visual Grouping** - See all array items at a glance without scrolling
-
-**Example:**
-
+Primitive arrays display as horizontal, editable tags:
 ```json
 "providers": ["google", "facebook", "email"]
 ```
+Appears as: `[google] [facebook] [email] [+]` with click-to-add and hover-to-delete functionality.
 
-Displays as: `[google] [facebook] [email] [+]` with inline editing!
+### Visual Hierarchy
 
-### Visual Design & Material Design 3
+- VS Code-inspired syntax highlighting with color-coded property keys
+- Vertical indentation guides for nested structures (Gold → Purple → Blue)
+- Collapsible sections for deeply nested objects
+- Material Design 3 interface with dark/light theme support
 
-- 🎨 **Material Design 3** - Modern color system with beautiful pastels and smooth transitions
-- 🌓 **Seamless Theme Switching** - Toggle between light and dark modes instantly
-- 🌈 **VS Code-Style Color-Coded Nesting** - Gold → Purple → Blue cycling colors for nested levels
-- 📏 **Vertical Indentation Guides** - Visual lines showing nesting structure (like VS Code bracket pairs)
-- 🎭 **Material Icons** - Google's Material Symbols throughout the UI
-- 💅 **Smooth Animations** - Dialog fade-ins, button hover effects, collapsible sections
+### Editing Features
 
-### Advanced Editing Capabilities
-
-- ✏️ **Live Editing** - Changes sync instantly between form and JSON preview (with debouncing)
-- 📦 **Deep Nesting Support** - Edit objects nested 10+ levels deep with visual guides
-- 🔽 **Collapsible Sections** - Expand/collapse nested objects to manage complexity
-- ➕ **Add Properties Anywhere** - Add properties to root objects or deeply nested objects
-- 🗑️ **Delete Properties** - Remove unwanted properties with a simple dialog
-- ➕ **Add/Copy Objects** - Create new objects or duplicate the last one
-- 🔄 **Type Preservation** - Automatically maintains strings, numbers, booleans, arrays, and nested objects
-
-### User Experience
-
-- 💾 **Auto-save Configuration** - Desktop app remembers your last opened file
-- ⌨️ **Keyboard Shortcuts** - Ctrl+S to save, ← → to navigate between objects
-- 📝 **Split-pane Design** - Form editor on left, live JSON preview on right (resizable)
-- 🔍 **Font Size Controls** - Adjust text size for better readability
-- 📱 **Fully Responsive** - Works on desktop, tablet, and mobile browsers
+- Live preview pane with bidirectional sync
+- Add/delete properties at any nesting level
+- Type preservation (strings, numbers, booleans, arrays, objects)
+- Add new objects or duplicate existing ones
+- Keyboard shortcuts (Ctrl+S to save, ← → to navigate)
+- Adjustable font sizes for editor and preview panes
 
 ## 🌐 Web Version
 
