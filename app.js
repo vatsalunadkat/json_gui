@@ -5,7 +5,7 @@ let currentFilePath = null;
 let entryMap = new Map();
 let collapsedSections = new Set();
 
-// Color palette for nested levels (matching Python app)
+// Color palette for nested levels - 7 unique bright colors
 const nestColors = [
   "var(--nest-color-0)",
   "var(--nest-color-1)",
@@ -13,6 +13,7 @@ const nestColors = [
   "var(--nest-color-3)",
   "var(--nest-color-4)",
   "var(--nest-color-5)",
+  "var(--nest-color-6)",
 ];
 
 // Initialize app
@@ -714,11 +715,9 @@ function buildFormRecursive(obj, pathKeys, container, depth) {
       label.className = "field-label";
       label.textContent = key;
 
-      // Color label based on depth (base level stays default, nested gets parent color)
-      if (depth > 0) {
-        const parentColor = nestColors[(depth - 1) % nestColors.length];
-        label.style.color = parentColor;
-      }
+      // Color label based on depth to match right pane
+      const labelColor = nestColors[depth % nestColors.length];
+      label.style.color = labelColor;
 
       const input = document.createElement("input");
       input.className = "field-input";
@@ -805,7 +804,9 @@ function syntaxHighlight(textarea) {
     // Count leading spaces to determine depth
     const leadingSpaces = line.match(/^\s*/)[0].length;
     const depth = Math.floor(leadingSpaces / 2); // 2 spaces per indent level
-    const colorIndex = depth % nestColors.length;
+    // Subtract 1 to match left pane depth (which doesn't count the root object container)
+    const adjustedDepth = depth > 0 ? depth - 1 : 0;
+    const colorIndex = adjustedDepth % nestColors.length;
     
     // Syntax highlight with depth-aware key coloring
     return line.replace(

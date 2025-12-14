@@ -25,16 +25,21 @@
     --md-sys-color-outline: #938F99;
     --md-sys-color-outline-variant: #49454F;
 
-    /* VS Code color palette for nesting (dark theme) - Gold, Purple, Blue cyclic */
+    /* VS Code color palette for nesting (dark theme) - 7 unique bright colors */
     --nest-color-0: #FFD700;
     /* Gold */
     --nest-color-1: #DA70D6;
     /* Orchid/Purple */
     --nest-color-2: #179FFF;
-    /* Blue */
-    --nest-color-3: #FFD700;
-    --nest-color-4: #DA70D6;
-    --nest-color-5: #179FFF;
+    /* Sky Blue */
+    --nest-color-3: #FF6B6B;
+    /* Coral Red */
+    --nest-color-4: #4ECDC4;
+    /* Turquoise */
+    --nest-color-5: #FFA500;
+    /* Orange */
+    --nest-color-6: #98D8C8;
+    /* Mint Green */
 
     --indent-guide: #49454F;
     --scrollbar-bg: transparent;
@@ -85,16 +90,21 @@
     --md-sys-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
     --md-sys-elevation-3: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 8px 3px rgba(0, 0, 0, 0.15);
 
-    /* Syntax Highlighting / Nesting Colors - Same as Dark for consistency or slightly adjusted */
+    /* Syntax Highlighting / Nesting Colors - 7 unique colors for light theme */
     --nest-color-0: #D4AF37;
     /* Darker Gold */
     --nest-color-1: #9C27B0;
     /* Purple */
     --nest-color-2: #0277BD;
     /* Dark Blue */
-    --nest-color-3: #D4AF37;
-    --nest-color-4: #9C27B0;
-    --nest-color-5: #0277BD;
+    --nest-color-3: #D32F2F;
+    /* Dark Red */
+    --nest-color-4: #00897B;
+    /* Dark Teal */
+    --nest-color-5: #F57C00;
+    /* Dark Orange */
+    --nest-color-6: #388E3C;
+    /* Dark Green */
 
     --indent-guide: #E0E0E0;
     --scrollbar-thumb: #CAC4D0;
