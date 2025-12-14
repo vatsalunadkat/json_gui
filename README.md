@@ -1,6 +1,6 @@
 # JSON Object Editor (Joe)
 
-A web-based JSON editor designed for files containing arrays of objects. Simplifies editing large datasets through object-by-object navigation and an intuitive split-pane interface.
+A web-based JSON editor designed for files containing arrays of objects. Simplifies editing large datasets through object-by-object navigation and an intuitive split-pane interface. [Coded in ~4.5 hrs]
 
 **[Launch Web App](https://vatsalunadkat.github.io/json_gui/)** | No installation required
 
