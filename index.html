@@ -1,180 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JSON Editor Pro</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="app-container">
-      <!-- Navigation Bar -->
-      <nav class="navbar">
-        <div class="nav-left">
-          <h1 class="app-title">📝 JSON Editor Pro</h1>
-          <div class="object-nav">
-            <button id="btn-prev" class="nav-btn" title="Previous Object (←)">
-              ←
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Editor Pro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <div class="nav-left">
+        <h1 class="app-title">📝 JSON Editor Pro</h1>
+        <div class="object-nav">
+          <button id="btn-prev" class="nav-btn" title="Previous Object (←)">
+            ←
+          </button>
+          <span id="object-counter" class="object-counter">Object 1 / 1</span>
+          <button id="btn-next" class="nav-btn" title="Next Object (→)">
+            →
+          </button>
+        </div>
+      </div>
+      <div class="nav-right">
+        <div class="font-size-controls">
+          <button id="btn-font-decrease" class="font-btn" title="Decrease Font Size">
+            A-
+          </button>
+          <button id="btn-font-increase" class="font-btn" title="Increase Font Size">
+            A+
+          </button>
+        </div>
+        <div class="theme-switcher">
+          <button class="theme-btn" data-theme="light">Light</button>
+          <button class="theme-btn active" data-theme="dark">Dark</button>
+        </div>
+        <input type="file" id="file-input" accept=".json" style="display: none" />
+        <button id="btn-open" class="action-btn btn-open" title="Open JSON File">
+          📁 Open
+        </button>
+        <button id="btn-add" class="action-btn btn-add" title="Add New Object">
+          ➕ Add Object
+        </button>
+        <button id="btn-copy" class="action-btn btn-copy" title="Copy Last Object">
+          📋 Copy Last
+        </button>
+        <button id="btn-delete" class="action-btn btn-delete" title="Delete Current Object">
+          🗑️ Delete
+        </button>
+        <button id="btn-download" class="action-btn btn-download" title="Download JSON">
+          ⬇️ Download
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Left Pane: Form Editor -->
+      <div class="left-pane">
+        <div class="pane-header">
+          <h2>✏️ Editor</h2>
+          <div>
+            <button id="btn-add-root-prop" class="add-prop-btn" title="Add Property to Current Object"
+              style="margin-right: 8px">
+              + Add Property
             </button>
-            <span id="object-counter" class="object-counter">Object 1 / 1</span>
-            <button id="btn-next" class="nav-btn" title="Next Object (→)">
-              →
+            <button id="btn-delete-root-prop" class="delete-prop-btn-header"
+              title="Delete Property from Current Object">
+              - Delete Property
             </button>
           </div>
         </div>
-        <div class="nav-right">
-          <div class="font-size-controls">
-            <button
-              id="btn-font-decrease"
-              class="font-btn"
-              title="Decrease Font Size"
-            >
-              A-
-            </button>
-            <button
-              id="btn-font-increase"
-              class="font-btn"
-              title="Increase Font Size"
-            >
-              A+
-            </button>
-          </div>
-          <div class="theme-switcher">
-            <button class="theme-btn" data-theme="light">Light</button>
-            <button class="theme-btn active" data-theme="dark">Dark</button>
-          </div>
-          <input
-            type="file"
-            id="file-input"
-            accept=".json"
-            style="display: none"
-          />
-          <button
-            id="btn-open"
-            class="action-btn btn-open"
-            title="Open JSON File"
-          >
-            📁 Open
-          </button>
-          <button
-            id="btn-add"
-            class="action-btn btn-add"
-            title="Add New Object"
-          >
-            ➕ Add Object
-          </button>
-          <button
-            id="btn-copy"
-            class="action-btn btn-copy"
-            title="Copy Last Object"
-          >
-            📋 Copy Last
-          </button>
-          <button
-            id="btn-delete"
-            class="action-btn btn-delete"
-            title="Delete Current Object"
-          >
-            🗑️ Delete
-          </button>
-          <button
-            id="btn-download"
-            class="action-btn btn-download"
-            title="Download JSON"
-          >
-            ⬇️ Download
-          </button>
-        </div>
-      </nav>
-
-      <!-- Main Content -->
-      <div class="main-content">
-        <!-- Left Pane: Form Editor -->
-        <div class="left-pane">
-          <div class="pane-header">
-            <h2>✏️ Editor</h2>
-            <div>
-              <button
-                id="btn-add-root-prop"
-                class="add-prop-btn"
-                title="Add Property to Current Object"
-                style="margin-right: 8px"
-              >
-                + Add Property
-              </button>
-              <button
-                id="btn-delete-root-prop"
-                class="delete-prop-btn-header"
-                title="Delete Property from Current Object"
-              >
-                - Delete Property
-              </button>
-            </div>
-          </div>
-          <div id="form-container" class="form-container">
-            <div class="placeholder">
-              <p>👆 Open a JSON file to start editing</p>
-              <p class="placeholder-hint">File must be an array of objects</p>
-            </div>
+        <div id="form-container" class="form-container">
+          <div class="placeholder">
+            <p>👆 Open a JSON file to start editing</p>
+            <p class="placeholder-hint">File must be an array of objects</p>
           </div>
         </div>
+      </div>
 
-        <div id="resizer" class="resizer"></div>
+      <div id="resizer" class="resizer"></div>
 
-        <!-- Right Pane: JSON Preview -->
-        <div class="right-pane">
-          <div class="pane-header">
-            <h2>👁️ Preview</h2>
-            <span class="live-indicator">● LIVE</span>
-          </div>
-          <pre id="json-preview" class="json-preview">
-{
+      <!-- Right Pane: JSON Preview -->
+      <div class="right-pane">
+        <div class="pane-header">
+          <h2>👁️ Preview</h2>
+          <span class="live-indicator">● LIVE</span>
+        </div>
+        <textarea id="json-preview" class="json-preview" spellcheck="false">{
   "message": "Load a JSON file to see preview"
-}</pre
-          >
-        </div>
+}</textarea>
       </div>
     </div>
+  </div>
 
-    <!-- Add Object Dialog -->
-    <div id="add-object-dialog" class="dialog-overlay">
-      <div class="dialog">
-        <h3>Add New Object</h3>
-        <label>Property name:</label>
-        <input type="text" id="add-obj-key" placeholder="e.g., name" />
-        <label>Property value:</label>
-        <input
-          type="text"
-          id="add-obj-value"
-          placeholder='e.g., "John" or 42 or {"nested": "object"}'
-        />
-        <div class="dialog-buttons">
-          <button id="add-obj-confirm" class="btn-confirm">Add</button>
-          <button id="add-obj-cancel" class="btn-cancel">Cancel</button>
-        </div>
+  <!-- Add Object Dialog -->
+  <div id="add-object-dialog" class="dialog-overlay">
+    <div class="dialog">
+      <h3>Add New Object</h3>
+      <label>Property name:</label>
+      <input type="text" id="add-obj-key" placeholder="e.g., name" />
+      <label>Property value:</label>
+      <input type="text" id="add-obj-value" placeholder='e.g., "John" or 42 or {"nested": "object"}' />
+      <div class="dialog-buttons">
+        <button id="add-obj-confirm" class="btn-confirm">Add</button>
+        <button id="add-obj-cancel" class="btn-cancel">Cancel</button>
       </div>
     </div>
+  </div>
 
-    <!-- Add Property Dialog -->
-    <div id="add-prop-dialog" class="dialog-overlay">
-      <div class="dialog">
-        <h3>Add Property</h3>
-        <p id="add-prop-path" class="dialog-path"></p>
-        <label>Property name:</label>
-        <input type="text" id="add-prop-key" placeholder="e.g., email" />
-        <label>Property value:</label>
-        <input
-          type="text"
-          id="add-prop-value"
-          placeholder='e.g., "test@example.com" or [1, 2, 3]'
-        />
-        <div class="dialog-buttons">
-          <button id="add-prop-confirm" class="btn-confirm">Add</button>
-          <button id="add-prop-cancel" class="btn-cancel">Cancel</button>
-        </div>
+  <!-- Add Property Dialog -->
+  <div id="add-prop-dialog" class="dialog-overlay">
+    <div class="dialog">
+      <h3>Add Property</h3>
+      <p id="add-prop-path" class="dialog-path"></p>
+      <label>Property name:</label>
+      <input type="text" id="add-prop-key" placeholder="e.g., email" />
+      <label>Property value:</label>
+      <input type="text" id="add-prop-value" placeholder='e.g., "test@example.com" or [1, 2, 3]' />
+      <div class="dialog-buttons">
+        <button id="add-prop-confirm" class="btn-confirm">Add</button>
+        <button id="add-prop-cancel" class="btn-cancel">Cancel</button>
       </div>
     </div>
+  </div>
 
-    <script src="app.js"></script>
-  </body>
+  <script src="app.js"></script>
+</body>
+
 </html>

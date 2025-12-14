@@ -90,9 +90,12 @@ function initializeEventListeners() {
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft" && !e.target.matches("input")) {
+    // Disable navigation shortcuts if user is typing in an input or textarea
+    if (e.target.matches("input, textarea")) return;
+
+    if (e.key === "ArrowLeft") {
       navigateObject(-1);
-    } else if (e.key === "ArrowRight" && !e.target.matches("input")) {
+    } else if (e.key === "ArrowRight") {
       navigateObject(1);
     }
   });
@@ -104,6 +107,48 @@ function initializeEventListeners() {
         overlay.classList.remove("active");
       }
     });
+  });
+
+
+  // Preview Pane Handlers
+  const preview = document.getElementById("json-preview");
+
+  // Tab support for indentation
+  preview.addEventListener("keydown", (e) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const start = preview.selectionStart;
+      const end = preview.selectionEnd;
+
+      // Insert 2 spaces
+      preview.value = preview.value.substring(0, start) + "  " + preview.value.substring(end);
+
+      // Move caret
+      preview.selectionStart = preview.selectionEnd = start + 2;
+    }
+  });
+
+  // Live Update (Debounced)
+  let debounceTimer;
+  preview.addEventListener("input", (e) => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      try {
+        const newData = JSON.parse(e.target.value);
+        jsonData[currentIndex] = newData;
+
+        // Refresh form UI without full rebuild if possible, but full rebuild is safer for structure changes
+        displayCurrentObject(false); // pass false to skip updating preview from data (loop)
+
+        document.querySelector(".live-indicator").textContent = "● LIVE";
+        document.querySelector(".live-indicator").style.color = "#00FA9A";
+        preview.classList.remove("error");
+      } catch (err) {
+        document.querySelector(".live-indicator").textContent = "● INVALID JSON";
+        document.querySelector(".live-indicator").style.color = "var(--accent-red)";
+        preview.classList.add("error");
+      }
+    }, 500);
   });
 }
 
@@ -402,7 +447,7 @@ function navigateObject(direction) {
   displayCurrentObject();
 }
 
-function displayCurrentObject() {
+function displayCurrentObject(updatePreviewPane = true) {
   if (jsonData.length === 0) {
     document.getElementById("form-container").innerHTML = `
             <div class="placeholder">
@@ -410,7 +455,7 @@ function displayCurrentObject() {
                 <p class="placeholder-hint">File must be an array of objects</p>
             </div>
         `;
-    document.getElementById("json-preview").textContent = JSON.stringify(
+    document.getElementById("json-preview").value = JSON.stringify(
       { message: "Load a JSON file to see preview" },
       null,
       2
@@ -426,7 +471,9 @@ function displayCurrentObject() {
   formContainer.innerHTML = "";
 
   buildFormRecursive(obj, [], formContainer, 0);
-  updatePreview();
+  if (updatePreviewPane) {
+    updatePreview();
+  }
   updateNavigationButtons();
 
   // Update object counter
@@ -670,7 +717,7 @@ function formatValue(value) {
 function updatePreview() {
   updateDataFromUI();
   const preview = document.getElementById("json-preview");
-  preview.textContent = JSON.stringify(jsonData[currentIndex], null, 2);
+  preview.value = JSON.stringify(jsonData[currentIndex], null, 2);
 }
 
 function updateDataFromUI() {
