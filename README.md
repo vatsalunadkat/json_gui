@@ -54,6 +54,7 @@ A modern, elegant GUI application for editing JSON files with nested objects. Fe
 - ✅ Collapsible nested sections
 - ✅ Copy last object functionality
 - ✅ Browser-based file loading (your files stay private - nothing uploaded)
+- ✅ Smart Tag-style Array Editing (horizontal layout for lists)
 - ✅ Download edited JSON files
 - ✅ Auto-saves to browser localStorage
 - ✅ Works on mobile and desktop browsers

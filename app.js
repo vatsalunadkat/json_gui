@@ -136,13 +136,173 @@ function loadFallbackData() {
   // Fallback sample data
   jsonData = [
     {
-      name: "Sample Object",
-      description: "This is a sample JSON object",
-      settings: {
-        enabled: true,
-        count: 42,
+      "id": "app_001",
+      "name": "E-Commerce Platform",
+      "version": "2.5.3",
+      "active": true,
+      "configuration": {
+        "server": {
+          "host": "api.example.com",
+          "port": 8443,
+          "protocol": "https",
+          "timeout": 30000,
+          "retries": 3,
+          "endpoints": {
+            "users": "/api/v2/users",
+            "products": "/api/v2/products",
+            "orders": "/api/v2/orders",
+            "analytics": "/api/v2/analytics"
+          }
+        },
+        "database": {
+          "primary": {
+            "type": "postgresql",
+            "host": "db-primary.example.com",
+            "port": 5432,
+            "name": "ecommerce_prod",
+            "ssl": true,
+            "poolSize": 20
+          },
+          "replica": {
+            "type": "postgresql",
+            "host": "db-replica.example.com",
+            "port": 5432,
+            "name": "ecommerce_prod",
+            "ssl": true,
+            "readOnly": true
+          },
+          "cache": {
+            "type": "redis",
+            "host": "cache.example.com",
+            "port": 6379,
+            "ttl": 3600
+          }
+        },
+        "features": {
+          "authentication": {
+            "enabled": true,
+            "providers": ["google", "facebook", "email"],
+            "twoFactor": true,
+            "sessionTimeout": 7200
+          },
+          "payments": {
+            "enabled": true,
+            "gateways": {
+              "stripe": {
+                "apiKey": "sk_live_xxxxx",
+                "webhookSecret": "whsec_xxxxx",
+                "supportedCurrencies": ["USD", "EUR", "GBP", "JPY"]
+              },
+              "paypal": {
+                "clientId": "AYxxxxx",
+                "secret": "EPxxxxx",
+                "sandboxMode": false
+              }
+            },
+            "defaultCurrency": "USD"
+          },
+          "shipping": {
+            "enabled": true,
+            "providers": {
+              "fedex": {
+                "accountNumber": "123456789",
+                "apiKey": "xxxxx",
+                "services": ["STANDARD_OVERNIGHT", "PRIORITY_OVERNIGHT", "GROUND"]
+              },
+              "ups": {
+                "accountNumber": "987654321",
+                "apiKey": "yyyyy",
+                "services": ["NEXT_DAY_AIR", "2ND_DAY_AIR", "GROUND"]
+              }
+            },
+            "freeShippingThreshold": 50.0
+          }
+        }
       },
+      "ui": {
+        "theme": {
+          "primaryColor": "#0078D4",
+          "secondaryColor": "#107C10",
+          "accentColor": "#FFB900",
+          "backgroundColor": "#FFFFFF",
+          "textColor": "#1E1E1E",
+          "fonts": {
+            "primary": "Segoe UI, sans-serif",
+            "secondary": "Consolas, monospace",
+            "sizes": {
+              "small": 12,
+              "medium": 14,
+              "large": 18,
+              "xlarge": 24
+            }
+          }
+        },
+        "layout": {
+          "header": {
+            "height": 64,
+            "sticky": true,
+            "showLogo": true,
+            "showSearch": true
+          },
+          "sidebar": {
+            "width": 280,
+            "collapsible": true,
+            "defaultCollapsed": false
+          },
+          "footer": {
+            "height": 120,
+            "showSocialLinks": true,
+            "showNewsletter": true
+          }
+        }
+      },
+      "analytics": {
+        "google": {
+          "trackingId": "GA-XXXXXXX",
+          "enabled": true
+        },
+        "mixpanel": {
+          "token": "xxxxxxxxxxxx",
+          "enabled": true
+        },
+        "customEvents": ["purchase", "signup", "cart_abandon", "product_view"]
+      }
     },
+    {
+      "id": "app_002",
+      "name": "Mobile Banking App",
+      "version": "3.2.1",
+      "active": true,
+      "configuration": {
+        "server": {
+          "host": "api.bankapp.com",
+          "port": 443,
+          "protocol": "https",
+          "timeout": 15000,
+          "endpoints": {
+            "accounts": "/api/accounts",
+            "transactions": "/api/transactions",
+            "transfers": "/api/transfers"
+          }
+        },
+        "security": {
+          "encryption": {
+            "algorithm": "AES-256-GCM",
+            "keyRotation": 90
+          },
+          "biometric": {
+            "enabled": true,
+            "types": ["fingerprint", "faceId"],
+            "fallbackPin": true
+          },
+          "twoFactor": {
+            "enabled": true,
+            "methods": ["sms", "email", "authenticator"],
+            "required": true
+          }
+        }
+      }
+    }
   ];
   displayCurrentObject();
 }
@@ -270,9 +430,8 @@ function displayCurrentObject() {
   updateNavigationButtons();
 
   // Update object counter
-  document.getElementById("object-counter").textContent = `Object ${
-    currentIndex + 1
-  } / ${jsonData.length}`;
+  document.getElementById("object-counter").textContent = `Object ${currentIndex + 1
+    } / ${jsonData.length}`;
 }
 
 function buildFormRecursive(obj, pathKeys, container, depth) {
@@ -287,7 +446,7 @@ function buildFormRecursive(obj, pathKeys, container, depth) {
       const nestedDiv = document.createElement("div");
       nestedDiv.className = "nested-object";
       nestedDiv.style.position = "relative";
-      nestedDiv.style.marginLeft = `${depth * 30}px`;
+      // Removed manual marginLeft calculation to fix spacing issue
 
       // Color for this nesting level
       const color = nestColors[depth % nestColors.length];
@@ -357,13 +516,90 @@ function buildFormRecursive(obj, pathKeys, container, depth) {
 
       nestedDiv.appendChild(contentWrapper);
       container.appendChild(nestedDiv);
+      nestedDiv.appendChild(contentWrapper);
+      container.appendChild(nestedDiv);
+    } else if (
+      Array.isArray(value) &&
+      (value.length === 0 || value.every((item) => typeof item !== "object"))
+    ) {
+      // Horizontal Primitive Array (Tag-style)
+      const fieldRow = document.createElement("div");
+      fieldRow.className = "field-row";
+      // Removed manual marginLeft calculation to fix spacing issue
+
+      const label = document.createElement("div");
+      label.className = "field-label";
+      label.textContent = key;
+      if (depth > 0) {
+        const parentColor = nestColors[(depth - 1) % nestColors.length];
+        label.style.color = parentColor;
+      }
+
+      const inputsContainer = document.createElement("div");
+      inputsContainer.className = "array-inputs-container";
+
+      value.forEach((item, index) => {
+        const itemWrapper = document.createElement("div");
+        itemWrapper.className = "array-item-wrapper";
+
+        const input = document.createElement("input");
+        input.className = "array-item-input";
+        input.type = "text";
+        input.value = item;
+        input.dataset.path = pathStr + "." + index;
+        input.dataset.type = typeof item;
+
+        // Auto-width
+        input.style.width = Math.max(60, item.toString().length * 9 + 25) + "px";
+
+        input.addEventListener("input", (e) => {
+          e.target.style.width = Math.max(60, e.target.value.length * 9 + 25) + "px";
+          updatePreview();
+        });
+
+        // Store in entry map
+        entryMap.set(pathStr + "." + index, {
+          element: input,
+          originalType: typeof item,
+          path: [...currentPath, index],
+        });
+
+        // Delete button
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-array-delete";
+        deleteBtn.textContent = "✕";
+        deleteBtn.title = "Remove item";
+        deleteBtn.addEventListener("click", () => {
+          value.splice(index, 1);
+          displayCurrentObject();
+        });
+
+        itemWrapper.appendChild(input);
+        itemWrapper.appendChild(deleteBtn);
+        inputsContainer.appendChild(itemWrapper);
+      });
+
+      // Add Item Button
+      const addBtn = document.createElement("button");
+      addBtn.className = "btn-array-add";
+      addBtn.textContent = "+";
+      addBtn.title = "Add item";
+      addBtn.addEventListener("click", () => {
+        const newValue = (value.length > 0 && typeof value[0] === 'number') ? 0 : "";
+        value.push(newValue);
+        displayCurrentObject();
+      });
+      inputsContainer.appendChild(addBtn);
+
+      fieldRow.appendChild(label);
+      fieldRow.appendChild(inputsContainer);
+      container.appendChild(fieldRow);
+
     } else {
       // Simple field
       const fieldRow = document.createElement("div");
       fieldRow.className = "field-row";
-      if (depth > 0) {
-        fieldRow.style.marginLeft = `${depth * 30}px`;
-      }
+      // Removed manual marginLeft calculation to fix spacing issue
 
       const label = document.createElement("div");
       label.className = "field-label";

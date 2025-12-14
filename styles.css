@@ -17,7 +17,7 @@
     --accent-purple: #9370DB;
     --accent-purple-hover: #7B68EE;
     --accent-red: #C42B1C;
-    
+
     /* VS Code color palette for nesting (dark theme) */
     --nest-color-0: #FFD700;
     --nest-color-1: #DA70D6;
@@ -25,7 +25,7 @@
     --nest-color-3: #FFA500;
     --nest-color-4: #00FA9A;
     --nest-color-5: #FF1493;
-    
+
     /* Indentation guide color */
     --indent-guide: #404040;
 }
@@ -48,7 +48,7 @@
     --accent-purple: #6B4C9A;
     --accent-purple-hover: #553D7F;
     --accent-red: #E81123;
-    
+
     /* VS Code color palette for nesting (light theme) */
     --nest-color-0: #0431FA;
     --nest-color-1: #319331;
@@ -56,7 +56,7 @@
     --nest-color-3: #7B3814;
     --nest-color-4: #B52E31;
     --nest-color-5: #7F3E96;
-    
+
     /* Indentation guide color */
     --indent-guide: #D0D0D0;
 }
@@ -229,12 +229,12 @@ body {
 }
 
 .btn-add {
-    background-color: var(--accent-blue);
+    background-color: var(--accent-green);
     color: white;
 }
 
 .btn-add:hover {
-    background-color: var(--accent-blue-hover);
+    background-color: var(--accent-green-hover);
 }
 
 .btn-copy {
@@ -255,12 +255,14 @@ body {
     background-color: #A21025;
 }
 
-.btn-save, .btn-download {
+.btn-save,
+.btn-download {
     background-color: var(--accent-green);
     color: white;
 }
 
-.btn-save:hover, .btn-download:hover {
+.btn-save:hover,
+.btn-download:hover {
     background-color: var(--accent-green-hover);
 }
 
@@ -657,7 +659,7 @@ body {
     .main-content {
         flex-direction: column;
     }
-    
+
     .field-row {
         grid-template-columns: 120px 1fr;
     }
@@ -667,19 +669,96 @@ body {
     .navbar {
         flex-wrap: wrap;
     }
-    
-    .nav-left, .nav-right {
+
+    .nav-left,
+    .nav-right {
         width: 100%;
         justify-content: space-between;
     }
-    
+
     .field-row {
         grid-template-columns: 1fr;
     }
-    
+
     .field-label {
         text-align: left;
         padding-right: 0;
         margin-bottom: 4px;
     }
+}
+
+/* Horizontal Array Inputs */
+.array-inputs-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+}
+
+.array-item-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.array-item-input {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: var(--base-font-size);
+    font-family: 'Segoe UI', sans-serif;
+    min-width: 60px;
+    max-width: 400px;
+    transition: all 0.2s;
+}
+
+.array-item-input:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.btn-array-add {
+    background-color: transparent;
+    border: 1px dashed var(--text-secondary);
+    color: var(--text-secondary);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-array-add:hover {
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+    background-color: rgba(16, 124, 16, 0.1);
+}
+
+.btn-array-delete {
+    background-color: var(--accent-red);
+    color: white;
+    border: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    cursor: pointer;
+    position: absolute;
+    right: -6px;
+    top: -6px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.array-item-wrapper:hover .btn-array-delete {
+    display: flex;
 }
