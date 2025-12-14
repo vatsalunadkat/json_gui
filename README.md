@@ -76,7 +76,7 @@ For the full-featured desktop application:
 ```bash
 # Clone the repository
 git clone https://github.com/vatsalunadkat/json_gui.git
-cd json_gui
+cd json_gui/python_app
 
 # Install dependencies
 pip install -r requirements.txt

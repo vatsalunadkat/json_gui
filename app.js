@@ -704,6 +704,8 @@ function deleteCurrentObject() {
 
 function initializeResizer() {
   const resizer = document.getElementById("resizer");
+  if (!resizer) return; // Guard clause
+
   const leftPane = document.querySelector(".left-pane");
   const container = document.querySelector(".main-content");
 
