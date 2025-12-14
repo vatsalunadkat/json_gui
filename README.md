@@ -2,6 +2,13 @@
 
 A modern, elegant GUI application for editing JSON files with nested objects. Features a beautiful dark/light theme interface, VS Code-style visual hierarchy, and comprehensive editing capabilities.
 
+**Available in two versions:**
+
+- 🖥️ **Desktop App** - Python/CustomTkinter (full offline functionality)
+- 🌐 **Web App** - HTML/CSS/JavaScript (runs in browser, no installation needed)
+
+🌐 **[Try the Web Version](https://vatsalunadkat.github.io/json_gui/)** - No installation required!
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
 ![CustomTkinter](https://img.shields.io/badge/CustomTkinter-5.2+-green.svg)
@@ -33,7 +40,38 @@ A modern, elegant GUI application for editing JSON files with nested objects. Fe
 - 🔄 **Live Preview** - JSON updates as you type
 - ↔️ **Easy Navigation** - Navigate between array objects with Previous/Next buttons
 
-## Installation
+## 🌐 Web Version
+
+**No installation required!** Use the web version directly in your browser:
+
+👉 **[https://vatsalunadkat.github.io/json_gui/](https://vatsalunadkat.github.io/json_gui/)**
+
+### Web Version Features
+
+- ✅ All core editing features (add/edit/delete properties and objects)
+- ✅ Dark/light theme support
+- ✅ VS Code-style color-coded indentation
+- ✅ Collapsible nested sections
+- ✅ Copy last object functionality
+- ✅ Browser-based file loading (your files stay private - nothing uploaded)
+- ✅ Download edited JSON files
+- ✅ Auto-saves to browser localStorage
+- ✅ Works on mobile and desktop browsers
+- ✅ No Python or dependencies required
+
+### Differences from Desktop App
+
+| Feature                 | Desktop                  | Web                              |
+| ----------------------- | ------------------------ | -------------------------------- |
+| **File editing**        | Direct file modification | Browser-based (download to save) |
+| **Auto-load last file** | ✅ Yes                   | ❌ Manual file selection         |
+| **Privacy**             | 100% local               | 100% local (no server uploads)   |
+| **Installation**        | Python required          | None - just open in browser      |
+| **Offline use**         | ✅ Yes                   | ✅ Yes (after first load)        |
+
+## 🖥️ Desktop Installation
+
+For the full-featured desktop application:
 
 ```bash
 # Clone the repository
@@ -189,3 +227,43 @@ Object 1
 - **Testing** - Create and modify test data sets
 - **Learning** - Understand JSON structure with visual hierarchy
 - **Quick Edits** - Faster than text editors for structured JSON
+
+## 🚀 Deploying Your Own Web Version
+
+Want to host your own copy of the web version on GitHub Pages?
+
+### Step 1: Push to GitHub
+
+```bash
+git add index.html styles.css app.js .nojekyll
+git commit -m "Add web version"
+git push origin main
+```
+
+### Step 2: Enable GitHub Pages
+
+1. Go to your repository on GitHub
+2. Click **Settings** → **Pages** (left sidebar)
+3. Under **Source**, select:
+   - Branch: `main`
+   - Folder: `/ (root)`
+4. Click **Save**
+
+### Step 3: Access Your Site
+
+After 1-2 minutes, your site will be live at:
+
+```
+https://<your-username>.github.io/<repository-name>/
+```
+
+Example: `https://vatsalunadkat.github.io/json_gui/`
+
+### Files Needed for Web Version
+
+- `index.html` - Main HTML structure
+- `styles.css` - All styling and theming
+- `app.js` - JavaScript application logic
+- `.nojekyll` - Tells GitHub Pages not to process with Jekyll
+
+**Note**: The Python desktop app (`json_editor.py`) and web version work independently. You can use both!
