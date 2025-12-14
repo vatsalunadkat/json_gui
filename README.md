@@ -1,13 +1,13 @@
-# JSON Editor Pro
+# JSON Object Editor (Joe)
 
-A modern, elegant GUI application for editing JSON files containing **arrays of objects**. Features a beautiful Material Design 3 inspired interface, VS Code-style visual hierarchy, and an innovative object-by-object editing approach with smart array visualization.
+A modern, elegant web-based JSON editor for editing JSON files containing **arrays of objects**. Features a beautiful Material Design 3 inspired interface, VS Code-style visual hierarchy, and an innovative object-by-object editing approach with smart array visualization.
+
+🌐 **[Launch Joe in Your Browser](https://vatsalunadkat.github.io/json_gui/)** - No installation required!
 
 **Available in two versions:**
 
-- 🖥️ **Desktop App** - Python/CustomTkinter (full offline functionality)
-- 🌐 **Web App** - HTML/CSS/JavaScript (runs in browser, no installation needed)
-
-🌐 **[Try the Web Version](https://vatsalunadkat.github.io/json_gui/)** - No installation required!
+- 🌐 **Web App** (Primary) - HTML/CSS/JavaScript - runs in any modern browser
+- 🖥️ **Python App** (Backup) - Python/CustomTkinter - offline desktop version
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
@@ -39,7 +39,7 @@ Beautiful pastel buttons, smooth animations, and seamless dark/light theme switc
 
 ### Object-by-Object Editing (Our Signature Feature!)
 
-Unlike traditional JSON editors that show the entire file structure, **JSON Editor Pro** focuses on **one object at a time**:
+Unlike traditional JSON editors that show the entire file structure, **Joe** focuses on **one object at a time**:
 
 - 📋 **Clean, Focused Editing** - Edit individual objects without distraction from hundreds of other entries
 - 🎯 **Perfect for Large Arrays** - Navigate through arrays of 10, 100, or 1000+ objects with ease
