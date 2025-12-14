@@ -508,6 +508,8 @@ button:disabled {
     flex: 1;
     overflow-y: auto;
     padding: 24px;
+    background-color: #1E1E1E;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Custom Scrollbar */
@@ -706,6 +708,8 @@ button:disabled {
     flex: 1;
     position: relative;
     overflow: hidden;
+    background-color: #1E1E1E;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .json-preview {
@@ -747,8 +751,8 @@ button:disabled {
     font-family: 'Roboto Mono', monospace;
     font-size: 13px;
     line-height: 1.6;
-    background-color: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-on-surface-variant);
+    background-color: #1E1E1E;
+    color: #D4D4D4;
     pointer-events: none;
     overflow: auto;
     white-space: pre;
