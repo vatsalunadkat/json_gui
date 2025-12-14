@@ -18,8 +18,39 @@ const nestColors = [
 // Initialize app
 document.addEventListener("DOMContentLoaded", () => {
   initializeEventListeners();
+  colorizeTitle();
   loadSampleData();
 });
+
+function colorizeTitle() {
+  const title = document.querySelector(".app-title");
+  if (!title) return;
+
+  // Palette of vibrant, "Google-ish" colors
+  // Palette matching the pastel buttons
+  const colors = [
+    "#64B5F6", // Blue (Open)
+    "#81C784", // Green (Add Object)
+    "#F48FB1", // Purple (Copy Last)
+    "#E57373", // Red (Delete)
+    "#FFB74D", // Orange (Download)
+  ];
+
+  const text = title.textContent;
+  title.innerHTML = "";
+
+  // Split into chars and colorize, keeping spaces
+  [...text].forEach((char, index) => {
+    const span = document.createElement("span");
+    span.textContent = char;
+    if (char.trim() !== "") {
+      span.style.color = colors[index % colors.length];
+      // Add a subtle drop shadow to make them pop on any background
+      span.style.textShadow = "0 1px 1px rgba(0,0,0,0.1)";
+    }
+    title.appendChild(span);
+  });
+}
 
 function initializeEventListeners() {
   // File operations
@@ -140,12 +171,18 @@ function initializeEventListeners() {
         // Refresh form UI without full rebuild if possible, but full rebuild is safer for structure changes
         displayCurrentObject(false); // pass false to skip updating preview from data (loop)
 
-        document.querySelector(".live-indicator").textContent = "● LIVE";
-        document.querySelector(".live-indicator").style.color = "#00FA9A";
+        document.querySelector(".live-indicator").innerHTML = `
+            <span class="material-symbols-outlined indicator-dot" style="font-size: 10px; color: #81C784;">fiber_manual_record</span>
+            LIVE
+        `;
+        document.querySelector(".live-indicator").style.color = "#81C784";
         preview.classList.remove("error");
       } catch (err) {
-        document.querySelector(".live-indicator").textContent = "● INVALID JSON";
-        document.querySelector(".live-indicator").style.color = "var(--accent-red)";
+        document.querySelector(".live-indicator").innerHTML = `
+             <span class="material-symbols-outlined indicator-dot" style="font-size: 10px; color: var(--md-sys-color-error);">error</span>
+             INVALID JSON
+        `;
+        document.querySelector(".live-indicator").style.color = "var(--md-sys-color-error)";
         preview.classList.add("error");
       }
     }, 500);
@@ -515,13 +552,18 @@ function buildFormRecursive(obj, pathKeys, container, depth) {
         : "";
 
       header.innerHTML = `
-                <span class="collapse-arrow">▼</span>
-                <span class="nested-title" style="color: ${color}">📦 ${key}${emptyIndicator}</span>
-                <button class="add-nested-prop" data-path="${pathStr}">+</button>
+                <span class="material-symbols-outlined collapse-arrow">expand_more</span>
+                <span class="nested-title" style="color: ${color}">
+                    <span class="material-symbols-outlined nested-icon" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">data_object</span>
+                    ${key}${emptyIndicator}
+                </span>
+                <button class="add-nested-prop" data-path="${pathStr}">
+                    <span class="material-symbols-outlined" style="font-size: 14px;">add</span>
+                </button>
             `;
 
       header.addEventListener("click", (e) => {
-        if (!e.target.classList.contains("add-nested-prop")) {
+        if (!e.target.closest(".add-nested-prop")) {
           toggleCollapse(pathStr, nestedDiv);
         }
       });
@@ -561,8 +603,6 @@ function buildFormRecursive(obj, pathKeys, container, depth) {
       }
       contentWrapper.appendChild(content);
 
-      nestedDiv.appendChild(contentWrapper);
-      container.appendChild(nestedDiv);
       nestedDiv.appendChild(contentWrapper);
       container.appendChild(nestedDiv);
     } else if (
@@ -614,7 +654,7 @@ function buildFormRecursive(obj, pathKeys, container, depth) {
         // Delete button
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "btn-array-delete";
-        deleteBtn.textContent = "✕";
+        deleteBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 14px;">close</span>';
         deleteBtn.title = "Remove item";
         deleteBtn.addEventListener("click", () => {
           value.splice(index, 1);
@@ -629,7 +669,7 @@ function buildFormRecursive(obj, pathKeys, container, depth) {
       // Add Item Button
       const addBtn = document.createElement("button");
       addBtn.className = "btn-array-add";
-      addBtn.textContent = "+";
+      addBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">add</span>';
       addBtn.title = "Add item";
       addBtn.addEventListener("click", () => {
         const newValue = (value.length > 0 && typeof value[0] === 'number') ? 0 : "";
