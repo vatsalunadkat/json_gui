@@ -20,7 +20,6 @@
     <nav class="navbar">
       <div class="nav-left">
         <div class="app-logo">
-          <span class="material-symbols-outlined">edit_document</span>
           <h1 class="app-title">JSON Editor</h1>
         </div>
         <div class="object-nav">
@@ -34,14 +33,6 @@
         </div>
       </div>
       <div class="nav-right">
-        <div class="font-size-controls">
-          <button id="btn-font-decrease" class="font-btn icon-btn" title="Decrease Font Size">
-            <span class="material-symbols-outlined">text_decrease</span>
-          </button>
-          <button id="btn-font-increase" class="font-btn icon-btn" title="Increase Font Size">
-            <span class="material-symbols-outlined">text_increase</span>
-          </button>
-        </div>
         <div class="theme-switcher">
           <button class="theme-btn" data-theme="light" title="Light Mode">
             <span class="material-symbols-outlined">light_mode</span>
@@ -83,7 +74,15 @@
             <span class="material-symbols-outlined">edit</span>
             <h2>Editor</h2>
           </div>
-          <div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div class="font-size-controls">
+              <button id="btn-editor-font-decrease" class="font-btn icon-btn" title="Decrease Editor Font Size">
+                <span class="material-symbols-outlined">text_decrease</span>
+              </button>
+              <button id="btn-editor-font-increase" class="font-btn icon-btn" title="Increase Editor Font Size">
+                <span class="material-symbols-outlined">text_increase</span>
+              </button>
+            </div>
             <button id="btn-add-root-prop" class="add-prop-btn btn-pastel-green" title="Add Property to Current Object"
               style="margin-right: 8px">
               <span class="material-symbols-outlined">add</span>
@@ -114,14 +113,26 @@
             <span class="material-symbols-outlined">visibility</span>
             <h2>Preview</h2>
           </div>
-          <span class="live-indicator">
-            <span class="material-symbols-outlined indicator-dot">fiber_manual_record</span>
-            LIVE
-          </span>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div class="font-size-controls">
+              <button id="btn-preview-font-decrease" class="font-btn icon-btn" title="Decrease Preview Font Size">
+                <span class="material-symbols-outlined">text_decrease</span>
+              </button>
+              <button id="btn-preview-font-increase" class="font-btn icon-btn" title="Increase Preview Font Size">
+                <span class="material-symbols-outlined">text_increase</span>
+              </button>
+            </div>
+            <span class="live-indicator">
+              <span class="material-symbols-outlined indicator-dot">fiber_manual_record</span>
+              <span>LIVE</span>
+            </span>
+          </div>
         </div>
-        <textarea id="json-preview" class="json-preview" spellcheck="false">{
+        <div class="preview-container">
+          <textarea id="json-preview" class="json-preview" spellcheck="false">{
   "message": "Load a JSON file to see preview"
 }</textarea>
+        </div>
       </div>
     </div>
   </div>

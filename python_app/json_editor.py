@@ -173,6 +173,40 @@ class JSONEditor(ctk.CTk):
                                            corner_radius=8,
                                            border_width=0)
         self.txt_preview.grid(row=1, column=0, sticky="nsew", padx=15, pady=(0, 15))
+        
+        # Configure syntax highlighting tags
+        self._setup_syntax_highlighting()
+
+    def _setup_syntax_highlighting(self):
+        """Configure text tags for JSON syntax highlighting"""
+        # Get current appearance mode for colors
+        mode = ctk.get_appearance_mode()
+        
+        if mode == "Dark":
+            # VS Code Dark+ theme colors
+            bracket_colors = ["#FFD700", "#DA70D6", "#179FFF"]  # Gold, Purple, Blue
+            string_color = "#CE9178"
+            number_color = "#B5CEA8"
+            boolean_color = "#569CD6"
+            null_color = "#569CD6"
+        else:
+            # VS Code Light+ theme colors
+            bracket_colors = ["#D4AF37", "#9C27B0", "#0277BD"]  # Dark Gold, Purple, Blue
+            string_color = "#A31515"
+            number_color = "#098658"
+            boolean_color = "#0000FF"
+            null_color = "#0000FF"
+        
+        # Create tags for each nesting level
+        for i, color in enumerate(bracket_colors):
+            self.txt_preview.tag_config(f"bracket_{i}", foreground=color, font=("Consolas", 11, "bold"))
+            self.txt_preview.tag_config(f"key_{i}", foreground=color, font=("Consolas", 11, "bold"))
+        
+        # Tags for other syntax elements
+        self.txt_preview.tag_config("string", foreground=string_color)
+        self.txt_preview.tag_config("number", foreground=number_color)
+        self.txt_preview.tag_config("boolean", foreground=boolean_color)
+        self.txt_preview.tag_config("null", foreground=null_color)
 
     def _bind_shortcuts(self):
         self.bind("<Control-s>", lambda e: self.save_changes())
@@ -437,8 +471,124 @@ class JSONEditor(ctk.CTk):
 
     def update_json_preview(self):
         obj = self.data[self.current_index]
+        json_text = json.dumps(obj, indent=2)
+        
         self.txt_preview.delete("1.0", "end")
-        self.txt_preview.insert("1.0", json.dumps(obj, indent=2))
+        self.txt_preview.insert("1.0", json_text)
+        
+        # Apply syntax highlighting
+        self._apply_json_syntax_highlighting(json_text)
+    
+    def _apply_json_syntax_highlighting(self, json_text):
+        """Apply VS Code-style syntax highlighting to JSON text"""
+        import re
+        
+        # Remove all existing tags
+        for tag in self.txt_preview.tag_names():
+            self.txt_preview.tag_remove(tag, "1.0", "end")
+        
+        depth = 0
+        i = 0
+        line = 1
+        col = 0
+        
+        while i < len(json_text):
+            char = json_text[i]
+            
+            # Track line and column for tag placement
+            if char == '\n':
+                line += 1
+                col = 0
+                i += 1
+                continue
+            
+            # Handle strings (keys and values)
+            if char == '"':
+                string_start = i
+                i += 1
+                while i < len(json_text) and json_text[i] != '"':
+                    if json_text[i] == '\\':
+                        i += 1  # Skip escaped character
+                    i += 1
+                i += 1  # Include closing quote
+                
+                # Check if it's a key (followed by colon)
+                j = i
+                while j < len(json_text) and json_text[j] in ' \t':
+                    j += 1
+                
+                start_pos = f"{line}.{col}"
+                end_pos = f"{line}.{col + (i - string_start)}"
+                
+                if j < len(json_text) and json_text[j] == ':':
+                    # Property key - use nested color
+                    tag = f"key_{depth % 3}"
+                    self.txt_preview.tag_add(tag, start_pos, end_pos)
+                else:
+                    # String value
+                    self.txt_preview.tag_add("string", start_pos, end_pos)
+                
+                col += i - string_start
+                continue
+            
+            # Handle opening brackets
+            if char in '{[':
+                start_pos = f"{line}.{col}"
+                end_pos = f"{line}.{col + 1}"
+                tag = f"bracket_{depth % 3}"
+                self.txt_preview.tag_add(tag, start_pos, end_pos)
+                depth += 1
+                col += 1
+                i += 1
+                continue
+            
+            # Handle closing brackets
+            if char in '}]':
+                depth -= 1
+                start_pos = f"{line}.{col}"
+                end_pos = f"{line}.{col + 1}"
+                tag = f"bracket_{depth % 3}"
+                self.txt_preview.tag_add(tag, start_pos, end_pos)
+                col += 1
+                i += 1
+                continue
+            
+            # Handle numbers
+            if char.isdigit() or (char == '-' and i + 1 < len(json_text) and json_text[i + 1].isdigit()):
+                num_start = i
+                if char == '-':
+                    i += 1
+                    col += 1
+                while i < len(json_text) and (json_text[i].isdigit() or json_text[i] in '.eE+-'):
+                    i += 1
+                    col += 1
+                
+                start_pos = f"{line}.{col - (i - num_start)}"
+                end_pos = f"{line}.{col}"
+                self.txt_preview.tag_add("number", start_pos, end_pos)
+                continue
+            
+            # Handle booleans and null
+            if json_text[i:i+4] == 'true' or json_text[i:i+5] == 'false':
+                length = 4 if json_text[i:i+4] == 'true' else 5
+                start_pos = f"{line}.{col}"
+                end_pos = f"{line}.{col + length}"
+                self.txt_preview.tag_add("boolean", start_pos, end_pos)
+                i += length
+                col += length
+                continue
+            
+            if json_text[i:i+4] == 'null':
+                start_pos = f"{line}.{col}"
+                end_pos = f"{line}.{col + 4}"
+                self.txt_preview.tag_add("null", start_pos, end_pos)
+                i += 4
+                col += 4
+                continue
+            
+            # Move to next character
+            col += 1
+            i += 1
 
     def navigate_next(self):
         if self.current_index < len(self.data) - 1:

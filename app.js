@@ -91,13 +91,21 @@ function initializeEventListeners() {
   // Initialize resizer
   initializeResizer();
 
-  // Font size controls
+  // Font size controls for editor
   document
-    .getElementById("btn-font-increase")
-    .addEventListener("click", increaseFontSize);
+    .getElementById("btn-editor-font-increase")
+    .addEventListener("click", () => changeEditorFontSize(2));
   document
-    .getElementById("btn-font-decrease")
-    .addEventListener("click", decreaseFontSize);
+    .getElementById("btn-editor-font-decrease")
+    .addEventListener("click", () => changeEditorFontSize(-2));
+
+  // Font size controls for preview
+  document
+    .getElementById("btn-preview-font-increase")
+    .addEventListener("click", () => changePreviewFontSize(2));
+  document
+    .getElementById("btn-preview-font-decrease")
+    .addEventListener("click", () => changePreviewFontSize(-2));
 
   // Theme switcher
   document.querySelectorAll(".theme-btn").forEach((btn) => {
@@ -159,9 +167,21 @@ function initializeEventListeners() {
     }
   });
 
+  // Sync scroll between textarea and highlight overlay
+  preview.addEventListener("scroll", () => {
+    const highlightDiv = preview.nextElementSibling;
+    if (highlightDiv && highlightDiv.classList.contains('json-highlight')) {
+      highlightDiv.scrollTop = preview.scrollTop;
+      highlightDiv.scrollLeft = preview.scrollLeft;
+    }
+  });
+
   // Live Update (Debounced)
   let debounceTimer;
   preview.addEventListener("input", (e) => {
+    // Update syntax highlighting immediately for visual feedback
+    syntaxHighlight(preview);
+    
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       try {
@@ -179,7 +199,7 @@ function initializeEventListeners() {
         preview.classList.remove("error");
       } catch (err) {
         document.querySelector(".live-indicator").innerHTML = `
-             <span class="material-symbols-outlined indicator-dot" style="font-size: 10px; color: var(--md-sys-color-error);">error</span>
+             <span class="material-symbols-obtained indicator-dot" style="font-size: 10px; color: var(--md-sys-color-error);">error</span>
              INVALID JSON
         `;
         document.querySelector(".live-indicator").style.color = "var(--md-sys-color-error)";
@@ -492,11 +512,13 @@ function displayCurrentObject(updatePreviewPane = true) {
                 <p class="placeholder-hint">File must be an array of objects</p>
             </div>
         `;
-    document.getElementById("json-preview").value = JSON.stringify(
+    const preview = document.getElementById("json-preview");
+    preview.value = JSON.stringify(
       { message: "Load a JSON file to see preview" },
       null,
       2
     );
+    syntaxHighlight(preview);
     updateNavigationButtons();
     return;
   }
@@ -757,7 +779,57 @@ function formatValue(value) {
 function updatePreview() {
   updateDataFromUI();
   const preview = document.getElementById("json-preview");
-  preview.value = JSON.stringify(jsonData[currentIndex], null, 2);
+  const jsonString = JSON.stringify(jsonData[currentIndex], null, 2);
+  preview.value = jsonString;
+  syntaxHighlight(preview);
+}
+
+function syntaxHighlight(textarea) {
+  const json = textarea.value;
+  
+  // Create or get the highlight overlay div
+  let highlightDiv = textarea.nextElementSibling;
+  if (!highlightDiv || !highlightDiv.classList.contains('json-highlight')) {
+    highlightDiv = document.createElement('div');
+    highlightDiv.className = 'json-highlight';
+    textarea.parentNode.insertBefore(highlightDiv, textarea.nextSibling);
+  }
+  
+  // Sync scroll position
+  highlightDiv.scrollTop = textarea.scrollTop;
+  highlightDiv.scrollLeft = textarea.scrollLeft;
+  
+  // Calculate indentation depth for each line to color keys
+  const lines = json.split('\n');
+  const coloredLines = lines.map(line => {
+    // Count leading spaces to determine depth
+    const leadingSpaces = line.match(/^\s*/)[0].length;
+    const depth = Math.floor(leadingSpaces / 2); // 2 spaces per indent level
+    const colorIndex = depth % nestColors.length;
+    
+    // Syntax highlight with depth-aware key coloring
+    return line.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      (match) => {
+        let cls = 'json-number';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            // Use nested color for keys based on depth
+            return `<span class="json-key" style="color: ${nestColors[colorIndex]}">${match}</span>`;
+          } else {
+            cls = 'json-string';
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'json-boolean';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return `<span class="${cls}">${match}</span>`;
+      }
+    );
+  });
+  
+  highlightDiv.innerHTML = coloredLines.join('\n');
 }
 
 function updateDataFromUI() {
@@ -1063,39 +1135,69 @@ function initializeResizer() {
 }
 
 // Font size controls
-let currentFontSize = 13; // Default font size in pixels
+let editorFontSize = 14; // Default font size for editor in pixels
+let previewFontSize = 13; // Default font size for preview in pixels
 
-function increaseFontSize() {
-  if (currentFontSize < 24) {
-    currentFontSize += 2;
-    applyFontSize();
+function changeEditorFontSize(delta) {
+  const newSize = editorFontSize + delta;
+  if (newSize >= 10 && newSize <= 24) {
+    editorFontSize = newSize;
+    applyEditorFontSize();
+    localStorage.setItem("jsonEditorEditorFontSize", editorFontSize);
   }
 }
 
-function decreaseFontSize() {
-  if (currentFontSize > 10) {
-    currentFontSize -= 2;
-    applyFontSize();
+function changePreviewFontSize(delta) {
+  const newSize = previewFontSize + delta;
+  if (newSize >= 10 && newSize <= 24) {
+    previewFontSize = newSize;
+    applyPreviewFontSize();
+    localStorage.setItem("jsonEditorPreviewFontSize", previewFontSize);
   }
 }
 
-function applyFontSize() {
-  document.documentElement.style.setProperty(
-    "--base-font-size",
-    currentFontSize + "px"
-  );
-  localStorage.setItem("jsonEditorFontSize", currentFontSize);
+function applyEditorFontSize() {
+  const formContainer = document.getElementById("form-container");
+  if (formContainer) {
+    formContainer.style.fontSize = editorFontSize + "px";
+    // Apply to all input fields, labels, and nested headers
+    const inputs = formContainer.querySelectorAll('.field-input, .array-item-input');
+    const labels = formContainer.querySelectorAll('.field-label');
+    const headers = formContainer.querySelectorAll('.nested-title');
+    
+    inputs.forEach(input => input.style.fontSize = editorFontSize + "px");
+    labels.forEach(label => label.style.fontSize = editorFontSize + "px");
+    headers.forEach(header => header.style.fontSize = editorFontSize + "px");
+  }
+}
+
+function applyPreviewFontSize() {
+  const preview = document.getElementById("json-preview");
+  const highlight = preview ? preview.nextElementSibling : null;
+  
+  if (preview) {
+    preview.style.fontSize = previewFontSize + "px";
+  }
+  if (highlight && highlight.classList.contains('json-highlight')) {
+    highlight.style.fontSize = previewFontSize + "px";
+  }
 }
 
 // Load from localStorage on startup if available
 window.addEventListener("load", () => {
   const savedData = localStorage.getItem("jsonEditorData");
   const savedIndex = localStorage.getItem("jsonEditorIndex");
-  const savedFontSize = localStorage.getItem("jsonEditorFontSize");
+  const savedEditorFontSize = localStorage.getItem("jsonEditorEditorFontSize");
+  const savedPreviewFontSize = localStorage.getItem("jsonEditorPreviewFontSize");
 
-  if (savedFontSize) {
-    currentFontSize = parseInt(savedFontSize);
-    applyFontSize();
+  if (savedEditorFontSize) {
+    editorFontSize = parseInt(savedEditorFontSize);
+    applyEditorFontSize();
+  }
+  
+  if (savedPreviewFontSize) {
+    previewFontSize = parseInt(savedPreviewFontSize);
+    applyPreviewFontSize();
   }
 
   if (savedData) {

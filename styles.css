@@ -39,6 +39,13 @@
     --indent-guide: #49454F;
     --scrollbar-bg: transparent;
     --scrollbar-thumb: #49454F;
+
+    /* JSON Syntax Highlighting Colors (VS Code Dark+ theme inspired) */
+    --json-key: #9CDCFE;
+    --json-string: #CE9178;
+    --json-number: #B5CEA8;
+    --json-boolean: #569CD6;
+    --json-null: #569CD6;
 }
 
 [data-theme="light"] {
@@ -87,6 +94,13 @@
 
     --indent-guide: #E0E0E0;
     --scrollbar-thumb: #CAC4D0;
+
+    /* JSON Syntax Highlighting Colors (VS Code Light+ theme inspired) */
+    --json-key: #001080;
+    --json-string: #A31515;
+    --json-number: #098658;
+    --json-boolean: #0000FF;
+    --json-null: #0000FF;
 }
 
 * {
@@ -160,8 +174,8 @@ button:disabled {
 .theme-btn {
     background-color: transparent;
     /* Changed from secondary-container */
-    color: var(--md-sys-color-on-surface-variant);
-    /* Changed for better inactive state */
+    color: var(--md-sys-color-on-surface);
+    /* Changed for better visibility */
 }
 
 .btn-tonal:hover,
@@ -244,6 +258,14 @@ button:disabled {
     border-radius: 50%;
 }
 
+/* Override icon-btn size for font controls */
+.font-size-controls .icon-btn.font-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+}
+
 .app-container {
     display: flex;
     flex-direction: column;
@@ -318,7 +340,7 @@ button:disabled {
 .font-size-controls,
 .theme-switcher {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     background-color: var(--md-sys-color-surface-variant);
     padding: 4px;
     border-radius: 24px;
@@ -331,6 +353,25 @@ button:disabled {
     padding: 0;
     font-size: 12px;
     border-radius: 50%;
+}
+
+/* All font buttons - unified style */
+.font-size-controls .font-btn,
+.font-size-controls button {
+    height: 24px !important;
+    width: 24px !important;
+    min-height: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+}
+
+.font-size-controls .font-btn .material-symbols-outlined,
+.font-size-controls button .material-symbols-outlined {
+    font-size: 16px !important;
 }
 
 .action-btn {
@@ -379,6 +420,9 @@ button:disabled {
 
 .right-pane {
     flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .pane-header {
@@ -387,6 +431,7 @@ button:disabled {
     align-items: center;
     padding: 16px 24px;
     background-color: var(--md-sys-color-background);
+    min-height: 56px;
     /* Seamless header */
     /* If you want a separated look: use surface-container-low */
 }
@@ -394,12 +439,16 @@ button:disabled {
 .pane-title-group {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 6px;
     color: var(--md-sys-color-primary);
 }
 
+.pane-title-group .material-symbols-outlined {
+    font-size: 20px;
+}
+
 .pane-title-group h2 {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 500;
     margin: 0;
     color: var(--md-sys-color-on-background);
@@ -424,28 +473,32 @@ button:disabled {
 }
 
 .add-prop-btn {
-    height: 32px;
+    height: auto;
     font-size: 12px;
-    padding: 0 12px;
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-    border-radius: 16px;
+    font-weight: 500;
+    padding: 4px 12px;
+    background-color: rgba(129, 199, 132, 0.15);
+    color: #81C784;
+    border-radius: 12px;
 }
 
 .add-prop-btn:hover {
+    background-color: rgba(129, 199, 132, 0.25);
     box-shadow: var(--md-sys-elevation-1);
 }
 
 .delete-prop-btn-header {
-    height: 32px;
+    height: auto;
     font-size: 12px;
-    padding: 0 12px;
-    background-color: var(--md-sys-color-error-container);
-    color: var(--md-sys-color-on-error-container);
-    border-radius: 16px;
+    font-weight: 500;
+    padding: 4px 12px;
+    background-color: rgba(229, 115, 115, 0.15);
+    color: #E57373;
+    border-radius: 12px;
 }
 
 .delete-prop-btn-header:hover {
+    background-color: rgba(229, 115, 115, 0.25);
     box-shadow: var(--md-sys-elevation-1);
 }
 
@@ -454,7 +507,7 @@ button:disabled {
 .form-container {
     flex: 1;
     overflow-y: auto;
-    padding: 0 24px 24px 24px;
+    padding: 24px;
 }
 
 /* Custom Scrollbar */
@@ -509,7 +562,7 @@ button:disabled {
 .field-row {
     display: grid;
     grid-template-columns: 140px 1fr;
-    gap: 16px;
+    gap: 8px;
     margin-bottom: 16px;
     align-items: center;
 }
@@ -649,28 +702,80 @@ button:disabled {
 
 
 /* JSON Preview Pane */
-.json-preview {
+.preview-container {
     flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.json-preview {
     padding: 24px;
     overflow: auto;
     font-family: 'Roboto Mono', monospace;
-    /* Modern mono font */
     font-size: 13px;
     line-height: 1.6;
-    background-color: var(--md-sys-color-surface-variant);
-    /* Slightly different bg */
-    color: var(--md-sys-color-on-surface-variant);
+    background-color: transparent;
+    color: transparent;
+    caret-color: var(--md-sys-color-on-surface-variant);
+    -webkit-text-fill-color: transparent;
     border: none;
     resize: none;
     outline: none;
     width: 100%;
     height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    margin: 0;
+    box-sizing: border-box;
 }
 
 .json-preview.error {
     border-left: 4px solid var(--md-sys-color-error);
-    background-color: var(--md-sys-color-error-container);
-    color: var(--md-sys-color-on-error-container);
+}
+
+/* Syntax Highlight Overlay */
+.json-highlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 24px;
+    margin: 0;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    background-color: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+    pointer-events: none;
+    overflow: auto;
+    white-space: pre;
+    word-wrap: break-word;
+    z-index: 1;
+    box-sizing: border-box;
+}
+
+/* JSON Syntax Colors */
+.json-key {
+    color: var(--json-key, var(--nest-color-2));
+}
+
+.json-string {
+    color: var(--json-string);
+}
+
+.json-number {
+    color: var(--json-number);
+}
+
+.json-boolean {
+    color: var(--json-boolean);
+}
+
+.json-null {
+    color: var(--json-null);
 }
 
 /* Dialogs */
