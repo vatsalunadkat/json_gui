@@ -7,11 +7,11 @@ A modern, elegant web-based JSON editor for editing JSON files containing **arra
 **Available in two versions:**
 
 - 🌐 **Web App** (Primary) - HTML/CSS/JavaScript - runs in any modern browser
-- 🖥️ **Python App** (Backup) - Python/CustomTkinter - offline desktop version
+- 🖥️ **Python App** (Backup) - offline desktop version for when you need local-only editing
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
-![CustomTkinter](https://img.shields.io/badge/CustomTkinter-5.2+-green.svg)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)
+![HTML5](https://img.shields.io/badge/HTML5-Web%20App-orange.svg)
 
 ---
 
