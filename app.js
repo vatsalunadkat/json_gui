@@ -6,6 +6,10 @@ let currentFileHandle = null; // File System Access API handle for direct saving
 let entryMap = new Map();
 let collapsedSections = new Set();
 
+// File formatting preservation
+let originalIndentation = 2; // Default to 2 spaces
+let originalHadTrailingNewline = true; // Default to true (VS Code standard)
+
 // Table view state
 let currentViewMode = 'form'; // 'form' or 'table'
 let tableFontSize = 13;
@@ -23,6 +27,12 @@ const nestColors = [
   "var(--nest-color-5)",
   "var(--nest-color-6)",
 ];
+
+// Canonical line ending normalization helper
+// Converts all \r\n (CRLF) and lone \r (old Mac) to \n (LF)
+function normalizeLF(text) {
+  return text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
 
 // Initialize app
 document.addEventListener("DOMContentLoaded", () => {
@@ -71,9 +81,6 @@ function initializeEventListeners() {
   document
     .getElementById("btn-save")
     .addEventListener("click", saveFile);
-  document
-    .getElementById("btn-download")
-    .addEventListener("click", downloadJSON);
 
   // Navigation
   document
@@ -227,7 +234,9 @@ function initializeEventListeners() {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       try {
-        const newData = JSON.parse(e.target.value);
+        // Normalize line endings immediately when reading from textarea to prevent CRLF from entering data model
+        const normalizedInput = normalizeLF(e.target.value);
+        const newData = JSON.parse(normalizedInput);
         jsonData[currentIndex] = newData;
 
         // Refresh form UI without full rebuild if possible, but full rebuild is safer for structure changes
@@ -465,9 +474,23 @@ async function openFile() {
       });
 
       const file = await fileHandle.getFile();
-      const content = await file.text();
+      let content = await file.text();
+      
+      // Detect if original file had trailing newline (before normalization)
+      originalHadTrailingNewline = content.endsWith('\n') || content.endsWith('\r\n') || content.endsWith('\r');
+      
+      // Normalize line endings immediately after reading
+      content = normalizeLF(content);
 
       try {
+        // Detect original indentation
+        const indentMatch = content.match(/^\s+/m);
+        if (indentMatch) {
+          originalIndentation = indentMatch[0].replace(/\t/g, '    ').length;
+        } else {
+          originalIndentation = 2; // Default
+        }
+
         const data = JSON.parse(content);
 
         // Validate structure
@@ -524,16 +547,27 @@ async function saveFile() {
     updateDataFromUI();
   }
 
-  // Create JSON string with LF line endings (matching VS Code default)
-  let jsonString = JSON.stringify(jsonData, null, 2) + "\n";
-  // Ensure LF line endings (not CRLF) for consistency with VS Code
-  jsonString = jsonString.replace(/\r\n/g, '\n');
+  // Create JSON string with original indentation
+  let jsonString = JSON.stringify(jsonData, null, originalIndentation);
+  
+  // Normalize to LF-only (Unix-style) to match VS Code and prevent Git diffs
+  jsonString = normalizeLF(jsonString);
+  
+  // Add final newline only if original file had one (preserve original format)
+  if (originalHadTrailingNewline) {
+    jsonString += '\n';
+  }
+
+  // Convert to UTF-8 bytes using TextEncoder to ensure exact byte writing (prevents OS CRLF conversion)
+  const encoder = new TextEncoder();
+  const jsonBytes = encoder.encode(jsonString);
 
   // If we have a file handle, save directly to it
   if (currentFileHandle) {
     try {
       const writable = await currentFileHandle.createWritable();
-      await writable.write(jsonString);
+      // Write as binary data to prevent any line ending conversion
+      await writable.write(jsonBytes);
       await writable.close();
 
       // Show brief success feedback
@@ -553,22 +587,27 @@ async function saveFile() {
       }
       console.error('Error saving file:', err);
       // Fall back to Save As
-      await saveFileAs(jsonString);
+      await saveFileAs(jsonBytes);
     }
   } else if ('showSaveFilePicker' in window) {
     // No existing handle, use Save As
-    await saveFileAs(jsonString);
+    await saveFileAs(jsonBytes);
   } else {
     // Fallback to download
     downloadJSON();
   }
 
-  // Update localStorage
-  localStorage.setItem("jsonEditorData", jsonString);
+  // Update localStorage with normalized JSON
+  let localStorageJson = JSON.stringify(jsonData, null, originalIndentation);
+  localStorageJson = normalizeLF(localStorageJson);
+  if (originalHadTrailingNewline) {
+    localStorageJson += '\n';
+  }
+  localStorage.setItem("jsonEditorData", localStorageJson);
 }
 
 // Save As using File System Access API
-async function saveFileAs(jsonString) {
+async function saveFileAs(jsonBytes) {
   try {
     const fileHandle = await window.showSaveFilePicker({
       suggestedName: currentFilePath || 'data.json',
@@ -579,7 +618,8 @@ async function saveFileAs(jsonString) {
     });
 
     const writable = await fileHandle.createWritable();
-    await writable.write(jsonString);
+    // Write as binary data to prevent any line ending conversion
+    await writable.write(jsonBytes);
     await writable.close();
 
     // Update file handle for future saves
@@ -591,8 +631,7 @@ async function saveFileAs(jsonString) {
   } catch (err) {
     if (err.name !== 'AbortError') {
       console.error('Error saving file:', err);
-      alert('Error saving file. Falling back to download.');
-      downloadJSON();
+      alert('Error saving file.');
     }
   }
 }
@@ -628,7 +667,23 @@ function handleFileSelect(event) {
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const data = JSON.parse(e.target.result);
+      let content = e.target.result;
+      
+      // Detect if original file had trailing newline (before normalization)
+      originalHadTrailingNewline = content.endsWith('\n') || content.endsWith('\r\n') || content.endsWith('\r');
+      
+      // Normalize line endings immediately after reading
+      content = normalizeLF(content);
+      
+      // Detect original indentation
+      const indentMatch = content.match(/^\s+/m);
+      if (indentMatch) {
+        originalIndentation = indentMatch[0].replace(/\t/g, '    ').length;
+      } else {
+        originalIndentation = 2; // Default
+      }
+      
+      const data = JSON.parse(content);
 
       // Validate structure
       if (!Array.isArray(data)) {
@@ -681,7 +736,12 @@ function saveToLocalStorage() {
   }
 
   updateDataFromUI();
-  localStorage.setItem("jsonEditorData", JSON.stringify(jsonData));
+  let jsonString = JSON.stringify(jsonData, null, originalIndentation);
+  jsonString = normalizeLF(jsonString);
+  if (originalHadTrailingNewline) {
+    jsonString += '\n';
+  }
+  localStorage.setItem("jsonEditorData", jsonString);
   localStorage.setItem("jsonEditorIndex", currentIndex.toString());
   alert(
     "Changes saved to browser storage!\n\nUse Download button to save as file."
@@ -695,8 +755,21 @@ function downloadJSON() {
   }
 
   updateDataFromUI();
-  const jsonString = JSON.stringify(jsonData, null, 2);
-  const blob = new Blob([jsonString + "\n"], { type: "application/json" });
+  // Create JSON string with original indentation
+  let jsonString = JSON.stringify(jsonData, null, originalIndentation);
+  
+  // Normalize to LF-only (Unix-style) to match VS Code and prevent Git diffs
+  jsonString = normalizeLF(jsonString);
+  
+  // Add final newline only if original file had one (preserve original format)
+  if (originalHadTrailingNewline) {
+    jsonString += '\n';
+  }
+  
+  // Use TextEncoder to ensure UTF-8 bytes
+  const encoder = new TextEncoder();
+  const jsonBytes = encoder.encode(jsonString);
+  const blob = new Blob([jsonBytes], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
@@ -1806,8 +1879,13 @@ function startCellEdit(td) {
     td.className = newFormatted.className;
     td.title = newFormatted.text;
 
-    // Update preview if we switch back
-    localStorage.setItem("jsonEditorData", JSON.stringify(jsonData));
+    // Update localStorage with normalized JSON
+    let jsonString = JSON.stringify(jsonData, null, originalIndentation);
+    jsonString = normalizeLF(jsonString);
+    if (originalHadTrailingNewline) {
+      jsonString += '\n';
+    }
+    localStorage.setItem("jsonEditorData", jsonString);
   };
 
   // Handle cancel
@@ -1943,7 +2021,14 @@ function deleteSelectedRows() {
   sortDirection = 'asc';
 
   renderTableView();
-  localStorage.setItem("jsonEditorData", JSON.stringify(jsonData));
+  
+  // Update localStorage with normalized JSON
+  let jsonString = JSON.stringify(jsonData, null, originalIndentation);
+  jsonString = normalizeLF(jsonString);
+  if (originalHadTrailingNewline) {
+    jsonString += '\n';
+  }
+  localStorage.setItem("jsonEditorData", jsonString);
 }
 
 // Table font size control
