@@ -524,7 +524,10 @@ async function saveFile() {
     updateDataFromUI();
   }
 
-  const jsonString = JSON.stringify(jsonData, null, 2) + "\n";
+  // Create JSON string with LF line endings (matching VS Code default)
+  let jsonString = JSON.stringify(jsonData, null, 2) + "\n";
+  // Ensure LF line endings (not CRLF) for consistency with VS Code
+  jsonString = jsonString.replace(/\r\n/g, '\n');
 
   // If we have a file handle, save directly to it
   if (currentFileHandle) {
