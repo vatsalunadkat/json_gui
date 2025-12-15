@@ -268,6 +268,15 @@ button:disabled {
     background-color: rgba(255, 183, 77, 0.25);
 }
 
+.btn-pastel-cyan {
+    background-color: rgba(77, 208, 225, 0.15);
+    color: #4DD0E1;
+}
+
+.btn-pastel-cyan:hover {
+    background-color: rgba(77, 208, 225, 0.25);
+}
+
 /* Icon Button (Square/Circle) */
 .icon-btn {
     padding: 0;
@@ -1033,4 +1042,321 @@ button:disabled {
     .nav-right {
         justify-content: center;
     }
+}
+
+/* ===================================
+   TABLE VIEW STYLES
+   =================================== */
+
+/* View Mode Toggle */
+.view-mode-toggle {
+    display: flex;
+    gap: 2px;
+    background-color: var(--md-sys-color-surface-variant);
+    padding: 4px;
+    border-radius: 24px;
+}
+
+.view-mode-btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 16px;
+    background-color: transparent;
+    color: var(--md-sys-color-on-surface-variant);
+    transition: all 0.2s ease;
+}
+
+.view-mode-btn .material-symbols-outlined {
+    font-size: 16px;
+}
+
+.view-mode-btn.active {
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+
+.view-mode-btn:hover:not(.active) {
+    background-color: rgba(103, 80, 164, 0.08);
+}
+
+/* Table View Pane */
+.table-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--md-sys-color-background);
+    width: 100%;
+}
+
+.table-container {
+    flex: 1;
+    overflow: auto;
+    background-color: var(--editor-background);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-actions {
+    display: flex;
+    gap: 12px;
+    padding: 12px 24px;
+    background-color: var(--md-sys-color-surface);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Data Table (Spreadsheet-like) */
+.data-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    table-layout: auto;
+}
+
+.data-table th,
+.data-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
+    white-space: nowrap;
+    min-width: 100px;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+}
+
+/* Sticky Header */
+.data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.data-table th {
+    background-color: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface);
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease;
+}
+
+.data-table th:hover {
+    background-color: var(--md-sys-color-secondary-container);
+}
+
+/* Sort Indicator */
+.sort-indicator {
+    margin-left: 6px;
+    font-size: 14px;
+    vertical-align: middle;
+    opacity: 0.8;
+}
+
+.sort-indicator.hidden {
+    visibility: hidden;
+}
+
+/* Index Column */
+.data-table .index-col {
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 500;
+    min-width: 60px;
+    max-width: 70px;
+    text-align: center;
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    border-right: 2px solid var(--md-sys-color-outline-variant);
+}
+
+.data-table th.index-col {
+    z-index: 15;
+    cursor: default;
+}
+
+.data-table th.index-col:hover {
+    background-color: var(--md-sys-color-surface-variant);
+}
+
+/* Select Column */
+.data-table .select-col {
+    min-width: 40px;
+    max-width: 40px;
+    text-align: center;
+    padding: 10px 8px;
+}
+
+/* Alternating Rows */
+.data-table tbody tr:nth-child(odd) {
+    background-color: var(--md-sys-color-surface);
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Hover Effect on Rows */
+.data-table tbody tr:hover {
+    background-color: rgba(208, 188, 255, 0.08);
+}
+
+.data-table tbody tr:hover .index-col {
+    background-color: rgba(208, 188, 255, 0.12);
+}
+
+/* Hover Effect on Data Cells */
+.data-table td:not(.index-col):not(.select-col) {
+    cursor: text;
+    transition: background-color 0.1s ease;
+}
+
+.data-table td:not(.index-col):not(.select-col):hover {
+    background-color: rgba(208, 188, 255, 0.15);
+}
+
+/* Editable Cell Input */
+.cell-input {
+    width: 100%;
+    min-width: 80px;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    border: 2px solid var(--md-sys-color-primary);
+    padding: 6px 10px;
+    font-size: inherit;
+    font-family: inherit;
+    border-radius: 4px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.cell-input:focus {
+    box-shadow: 0 0 0 3px rgba(208, 188, 255, 0.3);
+}
+
+/* Selected Row */
+.data-table tbody tr.selected {
+    background-color: rgba(208, 188, 255, 0.18) !important;
+}
+
+.data-table tbody tr.selected .index-col {
+    background-color: rgba(208, 188, 255, 0.25);
+}
+
+/* Row Checkbox */
+.row-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--md-sys-color-primary);
+}
+
+/* Empty State */
+.table-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: center;
+}
+
+.table-empty-state .material-symbols-outlined {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* Column Header Tooltip Styling */
+.data-table th[title] {
+    position: relative;
+}
+
+/* Cell Type Indicators */
+.cell-null {
+    color: var(--json-null);
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.cell-array,
+.cell-object {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.cell-boolean-true {
+    color: #81C784;
+}
+
+.cell-boolean-false {
+    color: #E57373;
+}
+
+.cell-number {
+    color: var(--json-number);
+}
+
+.cell-empty {
+    color: var(--md-sys-color-outline);
+    font-style: italic;
+}
+
+/* Responsive adjustments for table view */
+@media (max-width: 1024px) {
+    .view-mode-toggle {
+        order: -1;
+        margin-bottom: 8px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+        min-width: 80px;
+    }
+}
+
+/* Save Notification Toast */
+.save-notification {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.save-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.save-notification .material-symbols-outlined {
+    color: #81C784;
 }

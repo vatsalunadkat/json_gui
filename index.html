@@ -31,6 +31,16 @@
             <span class="material-symbols-outlined">arrow_forward</span>
           </button>
         </div>
+        <div class="view-mode-toggle">
+          <button class="view-mode-btn active" data-view="form" title="Form View">
+            <span class="material-symbols-outlined">edit_note</span>
+            Form
+          </button>
+          <button class="view-mode-btn" data-view="table" title="Table View">
+            <span class="material-symbols-outlined">table_chart</span>
+            Table
+          </button>
+        </div>
       </div>
       <div class="nav-right">
         <div class="theme-switcher">
@@ -45,6 +55,10 @@
         <button id="btn-open" class="action-btn btn-open btn-pastel-blue" title="Open JSON File">
           <span class="material-symbols-outlined">folder_open</span>
           Open
+        </button>
+        <button id="btn-save" class="action-btn btn-save btn-pastel-cyan" title="Save to File (Ctrl+S)">
+          <span class="material-symbols-outlined">save</span>
+          Save
         </button>
         <button id="btn-add" class="action-btn btn-add btn-pastel-green" title="Add New Object">
           <span class="material-symbols-outlined">post_add</span>
@@ -132,6 +146,39 @@
           <textarea id="json-preview" class="json-preview" spellcheck="false">{
   "message": "Load a JSON file to see preview"
 }</textarea>
+        </div>
+      </div>
+
+      <!-- Table View Pane (hidden by default) -->
+      <div class="table-pane" style="display: none;">
+        <div class="pane-header">
+          <div class="pane-title-group">
+            <span class="material-symbols-outlined">table_chart</span>
+            <h2>Table View</h2>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <div class="font-size-controls">
+              <button id="btn-table-font-decrease" class="font-btn icon-btn" title="Decrease Table Font Size">
+                <span class="material-symbols-outlined">text_decrease</span>
+              </button>
+              <button id="btn-table-font-increase" class="font-btn icon-btn" title="Increase Table Font Size">
+                <span class="material-symbols-outlined">text_increase</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="table-container" class="table-container">
+          <!-- Table is dynamically generated here -->
+        </div>
+        <div class="table-actions">
+          <button id="btn-table-add-row" class="action-btn btn-pastel-green">
+            <span class="material-symbols-outlined">add</span>
+            Add Row
+          </button>
+          <button id="btn-table-delete-selected" class="action-btn btn-pastel-red">
+            <span class="material-symbols-outlined">delete</span>
+            Delete Selected
+          </button>
         </div>
       </div>
     </div>

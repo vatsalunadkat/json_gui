@@ -2,8 +2,16 @@
 let jsonData = [];
 let currentIndex = 0;
 let currentFilePath = null;
+let currentFileHandle = null; // File System Access API handle for direct saving
 let entryMap = new Map();
 let collapsedSections = new Set();
+
+// Table view state
+let currentViewMode = 'form'; // 'form' or 'table'
+let tableFontSize = 13;
+let sortColumn = null;
+let sortDirection = 'asc'; // 'asc' or 'desc'
+let selectedRows = new Set();
 
 // Color palette for nested levels - 7 unique bright colors
 const nestColors = [
@@ -55,13 +63,14 @@ function colorizeTitle() {
 
 function initializeEventListeners() {
   // File operations
-  document.getElementById("btn-open").addEventListener("click", () => {
-    document.getElementById("file-input").click();
-  });
+  document.getElementById("btn-open").addEventListener("click", openFile);
 
   document
     .getElementById("file-input")
     .addEventListener("change", handleFileSelect);
+  document
+    .getElementById("btn-save")
+    .addEventListener("click", saveFile);
   document
     .getElementById("btn-download")
     .addEventListener("click", downloadJSON);
@@ -113,6 +122,31 @@ function initializeEventListeners() {
     btn.addEventListener("click", () => changeTheme(btn.dataset.theme));
   });
 
+  // View mode toggle
+  document.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchViewMode(btn.dataset.view));
+  });
+
+  // Table font size controls
+  const tableFontIncrease = document.getElementById('btn-table-font-increase');
+  const tableFontDecrease = document.getElementById('btn-table-font-decrease');
+  if (tableFontIncrease) {
+    tableFontIncrease.addEventListener('click', () => changeTableFontSize(2));
+  }
+  if (tableFontDecrease) {
+    tableFontDecrease.addEventListener('click', () => changeTableFontSize(-2));
+  }
+
+  // Table actions
+  const tableAddRow = document.getElementById('btn-table-add-row');
+  const tableDeleteSelected = document.getElementById('btn-table-delete-selected');
+  if (tableAddRow) {
+    tableAddRow.addEventListener('click', addTableRow);
+  }
+  if (tableDeleteSelected) {
+    tableDeleteSelected.addEventListener('click', deleteSelectedRows);
+  }
+
   // Dialog handlers
   document
     .getElementById("add-obj-confirm")
@@ -130,6 +164,13 @@ function initializeEventListeners() {
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
+    // Ctrl+S to save
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      saveFile();
+      return;
+    }
+
     // Disable navigation shortcuts if user is typing in an input or textarea
     if (e.target.matches("input, textarea")) return;
 
@@ -182,7 +223,7 @@ function initializeEventListeners() {
   preview.addEventListener("input", (e) => {
     // Update syntax highlighting immediately for visual feedback
     syntaxHighlight(preview);
-    
+
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       try {
@@ -410,9 +451,176 @@ function loadFallbackData() {
   displayCurrentObject();
 }
 
+// Open file using File System Access API (with fallback)
+async function openFile() {
+  // Check if File System Access API is supported
+  if ('showOpenFilePicker' in window) {
+    try {
+      const [fileHandle] = await window.showOpenFilePicker({
+        types: [{
+          description: 'JSON Files',
+          accept: { 'application/json': ['.json'] }
+        }],
+        multiple: false
+      });
+
+      const file = await fileHandle.getFile();
+      const content = await file.text();
+
+      try {
+        const data = JSON.parse(content);
+
+        // Validate structure
+        if (!Array.isArray(data)) {
+          alert("Error: JSON must be an array of objects");
+          return;
+        }
+
+        if (data.length === 0 || !data.every((item) => typeof item === "object" && !Array.isArray(item))) {
+          alert("Error: JSON must contain only objects");
+          return;
+        }
+
+        jsonData = data;
+        currentIndex = 0;
+        currentFilePath = file.name;
+        currentFileHandle = fileHandle; // Store handle for saving
+        collapsedSections.clear();
+        selectedRows.clear();
+        sortColumn = null;
+        sortDirection = 'asc';
+
+        if (currentViewMode === 'table') {
+          renderTableView();
+        } else {
+          displayCurrentObject();
+        }
+
+      } catch (error) {
+        alert("Error parsing JSON: " + error.message);
+      }
+
+    } catch (err) {
+      // User cancelled or error occurred
+      if (err.name !== 'AbortError') {
+        console.error('Error opening file:', err);
+      }
+    }
+  } else {
+    // Fallback to traditional file input
+    document.getElementById("file-input").click();
+  }
+}
+
+// Save file directly using File System Access API
+async function saveFile() {
+  if (jsonData.length === 0) {
+    alert("No data to save");
+    return;
+  }
+
+  // Update data from current view
+  if (currentViewMode === 'form') {
+    updateDataFromUI();
+  }
+
+  const jsonString = JSON.stringify(jsonData, null, 2) + "\n";
+
+  // If we have a file handle, save directly to it
+  if (currentFileHandle) {
+    try {
+      const writable = await currentFileHandle.createWritable();
+      await writable.write(jsonString);
+      await writable.close();
+
+      // Show brief success feedback
+      showSaveNotification("Saved to " + currentFilePath);
+
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        // Permission denied, try to request it again
+        try {
+          const permission = await currentFileHandle.requestPermission({ mode: 'readwrite' });
+          if (permission === 'granted') {
+            return saveFile(); // Retry
+          }
+        } catch (e) {
+          // Fall through to "Save As" behavior
+        }
+      }
+      console.error('Error saving file:', err);
+      // Fall back to Save As
+      await saveFileAs(jsonString);
+    }
+  } else if ('showSaveFilePicker' in window) {
+    // No existing handle, use Save As
+    await saveFileAs(jsonString);
+  } else {
+    // Fallback to download
+    downloadJSON();
+  }
+
+  // Update localStorage
+  localStorage.setItem("jsonEditorData", jsonString);
+}
+
+// Save As using File System Access API
+async function saveFileAs(jsonString) {
+  try {
+    const fileHandle = await window.showSaveFilePicker({
+      suggestedName: currentFilePath || 'data.json',
+      types: [{
+        description: 'JSON Files',
+        accept: { 'application/json': ['.json'] }
+      }]
+    });
+
+    const writable = await fileHandle.createWritable();
+    await writable.write(jsonString);
+    await writable.close();
+
+    // Update file handle for future saves
+    currentFileHandle = fileHandle;
+    currentFilePath = (await fileHandle.getFile()).name;
+
+    showSaveNotification("Saved to " + currentFilePath);
+
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error('Error saving file:', err);
+      alert('Error saving file. Falling back to download.');
+      downloadJSON();
+    }
+  }
+}
+
+// Show a brief save notification
+function showSaveNotification(message) {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = 'save-notification';
+  notification.innerHTML = `
+    <span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span>
+    ${message}
+  `;
+  document.body.appendChild(notification);
+
+  // Trigger animation
+  setTimeout(() => notification.classList.add('show'), 10);
+
+  // Remove after delay
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 2000);
+}
+
 function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
+
+  // Clear file handle since we're using traditional file input (can't save back)
+  currentFileHandle = null;
 
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -785,7 +993,7 @@ function updatePreview() {
 
 function syntaxHighlight(textarea) {
   const json = textarea.value;
-  
+
   // Create or get the highlight overlay div
   let highlightDiv = textarea.nextElementSibling;
   if (!highlightDiv || !highlightDiv.classList.contains('json-highlight')) {
@@ -793,11 +1001,11 @@ function syntaxHighlight(textarea) {
     highlightDiv.className = 'json-highlight';
     textarea.parentNode.insertBefore(highlightDiv, textarea.nextSibling);
   }
-  
+
   // Sync scroll position
   highlightDiv.scrollTop = textarea.scrollTop;
   highlightDiv.scrollLeft = textarea.scrollLeft;
-  
+
   // Calculate indentation depth for each line to color keys
   const lines = json.split('\n');
   const coloredLines = lines.map(line => {
@@ -807,7 +1015,7 @@ function syntaxHighlight(textarea) {
     // Subtract 1 to match left pane depth (which doesn't count the root object container)
     const adjustedDepth = depth > 0 ? depth - 1 : 0;
     const colorIndex = adjustedDepth % nestColors.length;
-    
+
     // Syntax highlight with depth-aware key coloring
     return line.replace(
       /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
@@ -829,7 +1037,7 @@ function syntaxHighlight(textarea) {
       }
     );
   });
-  
+
   highlightDiv.innerHTML = coloredLines.join('\n');
 }
 
@@ -1165,7 +1373,7 @@ function applyEditorFontSize() {
     const inputs = formContainer.querySelectorAll('.field-input, .array-item-input');
     const labels = formContainer.querySelectorAll('.field-label');
     const headers = formContainer.querySelectorAll('.nested-title');
-    
+
     inputs.forEach(input => input.style.fontSize = editorFontSize + "px");
     labels.forEach(label => label.style.fontSize = editorFontSize + "px");
     headers.forEach(header => header.style.fontSize = editorFontSize + "px");
@@ -1175,7 +1383,7 @@ function applyEditorFontSize() {
 function applyPreviewFontSize() {
   const preview = document.getElementById("json-preview");
   const highlight = preview ? preview.nextElementSibling : null;
-  
+
   if (preview) {
     preview.style.fontSize = previewFontSize + "px";
   }
@@ -1190,15 +1398,20 @@ window.addEventListener("load", () => {
   const savedIndex = localStorage.getItem("jsonEditorIndex");
   const savedEditorFontSize = localStorage.getItem("jsonEditorEditorFontSize");
   const savedPreviewFontSize = localStorage.getItem("jsonEditorPreviewFontSize");
+  const savedTableFontSize = localStorage.getItem("jsonEditorTableFontSize");
 
   if (savedEditorFontSize) {
     editorFontSize = parseInt(savedEditorFontSize);
     applyEditorFontSize();
   }
-  
+
   if (savedPreviewFontSize) {
     previewFontSize = parseInt(savedPreviewFontSize);
     applyPreviewFontSize();
+  }
+
+  if (savedTableFontSize) {
+    tableFontSize = parseInt(savedTableFontSize);
   }
 
   if (savedData) {
@@ -1211,3 +1424,538 @@ window.addEventListener("load", () => {
     }
   }
 });
+
+// ===================================
+// TABLE VIEW FUNCTIONS
+// ===================================
+
+// Switch between form and table view
+function switchViewMode(mode) {
+  if (currentViewMode === mode) return;
+
+  // Save current data before switching
+  if (currentViewMode === 'form') {
+    updateDataFromUI();
+  }
+
+  currentViewMode = mode;
+
+  // Update button states
+  document.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === mode);
+  });
+
+  // Toggle pane visibility
+  const leftPane = document.querySelector('.left-pane');
+  const rightPane = document.querySelector('.right-pane');
+  const resizer = document.getElementById('resizer');
+  const tablePane = document.querySelector('.table-pane');
+
+  if (mode === 'table') {
+    leftPane.style.display = 'none';
+    rightPane.style.display = 'none';
+    resizer.style.display = 'none';
+    tablePane.style.display = 'flex';
+    renderTableView();
+  } else {
+    leftPane.style.display = '';
+    rightPane.style.display = '';
+    resizer.style.display = '';
+    tablePane.style.display = 'none';
+    displayCurrentObject();
+  }
+}
+
+// Collect all unique property paths from all objects using dot notation
+// Preserves the order properties appear in the JSON file
+function collectAllPropertyPaths(objects) {
+  const pathsSet = new Set();
+  const pathsArray = [];
+
+  function traverse(obj, prefix = '') {
+    if (obj === null || obj === undefined) return;
+
+    for (const key in obj) {
+      if (!obj.hasOwnProperty(key)) continue;
+
+      const path = prefix ? `${prefix}.${key}` : key;
+      const value = obj[key];
+
+      // If it's a nested object (not array, not null), traverse deeper
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        traverse(value, path);
+      } else {
+        // It's a leaf value (primitive, array, or null)
+        // Only add if we haven't seen this path before (preserve first occurrence order)
+        if (!pathsSet.has(path)) {
+          pathsSet.add(path);
+          pathsArray.push(path);
+        }
+      }
+    }
+  }
+
+  objects.forEach(obj => traverse(obj));
+  return pathsArray;
+}
+
+
+// Get value from object using dot notation path
+function getValueByPath(obj, path) {
+  if (!obj || !path) return undefined;
+
+  const keys = path.split('.');
+  let current = obj;
+
+  for (const key of keys) {
+    if (current === null || current === undefined) return undefined;
+    current = current[key];
+  }
+
+  return current;
+}
+
+// Set value in object using dot notation path
+function setValueByPath(obj, path, value) {
+  if (!obj || !path) return;
+
+  const keys = path.split('.');
+  let current = obj;
+
+  // Navigate to parent
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (current[key] === undefined || current[key] === null) {
+      current[key] = {};
+    }
+    current = current[key];
+  }
+
+  // Set the value
+  current[keys[keys.length - 1]] = value;
+}
+
+// Format value for display in table cell
+function formatCellValue(value) {
+  if (value === undefined) return { text: '', className: 'cell-empty' };
+  if (value === null) return { text: 'null', className: 'cell-null' };
+
+  if (Array.isArray(value)) {
+    // Primitive arrays: show as comma-separated
+    if (value.every(item => typeof item !== 'object' || item === null)) {
+      return { text: value.join(', '), className: 'cell-array' };
+    }
+    // Complex arrays: show as JSON
+    return { text: JSON.stringify(value), className: 'cell-array' };
+  }
+
+  if (typeof value === 'object') {
+    return { text: JSON.stringify(value), className: 'cell-object' };
+  }
+
+  if (typeof value === 'boolean') {
+    return { text: String(value), className: value ? 'cell-boolean-true' : 'cell-boolean-false' };
+  }
+
+  if (typeof value === 'number') {
+    return { text: String(value), className: 'cell-number' };
+  }
+
+  return { text: String(value), className: '' };
+}
+
+// Parse edited cell value back to appropriate type
+function parseEditedValue(newValue, originalValue) {
+  const trimmed = newValue.trim();
+
+  // Handle null
+  if (trimmed.toLowerCase() === 'null') return null;
+
+  // Handle booleans
+  if (trimmed.toLowerCase() === 'true') return true;
+  if (trimmed.toLowerCase() === 'false') return false;
+
+  // Handle arrays (comma-separated for primitives, or JSON)
+  if (Array.isArray(originalValue)) {
+    // Try parsing as JSON first
+    if (trimmed.startsWith('[')) {
+      try {
+        return JSON.parse(trimmed);
+      } catch (e) {
+        // Fall through to comma-separated parsing
+      }
+    }
+    // Parse as comma-separated values
+    if (trimmed === '') return [];
+    const items = trimmed.split(',').map(item => {
+      const t = item.trim();
+      // Try to preserve types for array items
+      if (t.toLowerCase() === 'true') return true;
+      if (t.toLowerCase() === 'false') return false;
+      if (t.toLowerCase() === 'null') return null;
+      const num = parseFloat(t);
+      if (!isNaN(num) && String(num) === t) return num;
+      return t;
+    });
+    return items;
+  }
+
+  // Handle JSON objects
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    try {
+      return JSON.parse(trimmed);
+    } catch (e) {
+      return newValue;
+    }
+  }
+
+  // Handle numbers - preserve type if original was number
+  if (typeof originalValue === 'number') {
+    const num = parseFloat(trimmed);
+    if (!isNaN(num)) return num;
+  }
+
+  // Default: return as string
+  return newValue;
+}
+
+// Render the table view
+function renderTableView() {
+  const container = document.getElementById('table-container');
+  if (!container) return;
+
+  if (jsonData.length === 0) {
+    container.innerHTML = `
+      <div class="table-empty-state">
+        <span class="material-symbols-outlined">upload_file</span>
+        <p>Open a JSON file to view as table</p>
+        <p style="font-size: 14px; opacity: 0.7;">File must be an array of objects</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Collect all property paths
+  const columns = collectAllPropertyPaths(jsonData);
+
+  if (columns.length === 0) {
+    container.innerHTML = `
+      <div class="table-empty-state">
+        <span class="material-symbols-outlined">table_chart</span>
+        <p>No properties found in the data</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Build table HTML
+  let html = '<table class="data-table">';
+
+  // Header row
+  html += '<thead><tr>';
+  html += '<th class="index-col select-col"><input type="checkbox" class="row-checkbox" id="select-all-rows" title="Select All"></th>';
+  html += '<th class="index-col">#</th>';
+
+  columns.forEach(col => {
+    const isSorted = sortColumn === col;
+    const arrow = isSorted ? (sortDirection === 'asc' ? '↑' : '↓') : '';
+    const arrowClass = isSorted ? 'sort-indicator' : 'sort-indicator hidden';
+    html += `<th data-column="${col}" title="${col}">${col}<span class="${arrowClass}">${arrow}</span></th>`;
+  });
+
+  html += '</tr></thead>';
+
+  // Body rows
+  html += '<tbody>';
+  jsonData.forEach((obj, rowIndex) => {
+    const isSelected = selectedRows.has(rowIndex);
+    html += `<tr data-row="${rowIndex}" class="${isSelected ? 'selected' : ''}">`;
+    html += `<td class="index-col select-col"><input type="checkbox" class="row-checkbox" data-row="${rowIndex}" ${isSelected ? 'checked' : ''}></td>`;
+    html += `<td class="index-col">${rowIndex}</td>`;
+
+    columns.forEach(col => {
+      const value = getValueByPath(obj, col);
+      const formatted = formatCellValue(value);
+      html += `<td data-row="${rowIndex}" data-column="${col}" class="${formatted.className}" title="${formatted.text}">${escapeHtml(formatted.text)}</td>`;
+    });
+
+    html += '</tr>';
+  });
+  html += '</tbody>';
+
+  html += '</table>';
+  container.innerHTML = html;
+
+  // Apply font size
+  applyTableFontSize();
+
+  // Add event listeners
+  setupTableEventListeners();
+}
+
+// Escape HTML characters
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Setup event listeners for table interactions
+function setupTableEventListeners() {
+  const container = document.getElementById('table-container');
+  if (!container) return;
+
+  // Column header click for sorting
+  container.querySelectorAll('th[data-column]').forEach(th => {
+    th.addEventListener('click', () => {
+      const column = th.dataset.column;
+      if (sortColumn === column) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortColumn = column;
+        sortDirection = 'asc';
+      }
+      sortTableData(column, sortDirection);
+      renderTableView();
+    });
+  });
+
+  // Cell click for editing
+  container.querySelectorAll('td[data-column]').forEach(td => {
+    td.addEventListener('click', () => {
+      startCellEdit(td);
+    });
+  });
+
+  // Row checkbox change
+  container.querySelectorAll('.row-checkbox[data-row]').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const rowIndex = parseInt(e.target.dataset.row);
+      if (e.target.checked) {
+        selectedRows.add(rowIndex);
+      } else {
+        selectedRows.delete(rowIndex);
+      }
+      updateRowSelection(rowIndex, e.target.checked);
+    });
+  });
+
+  // Select all checkbox
+  const selectAll = document.getElementById('select-all-rows');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        jsonData.forEach((_, idx) => selectedRows.add(idx));
+      } else {
+        selectedRows.clear();
+      }
+      renderTableView();
+    });
+  }
+}
+
+// Update row selection styling
+function updateRowSelection(rowIndex, isSelected) {
+  const row = document.querySelector(`tr[data-row="${rowIndex}"]`);
+  if (row) {
+    row.classList.toggle('selected', isSelected);
+  }
+}
+
+// Start editing a cell
+function startCellEdit(td) {
+  // Don't edit if already editing
+  if (td.querySelector('.cell-input')) return;
+
+  const rowIndex = parseInt(td.dataset.row);
+  const column = td.dataset.column;
+  const currentValue = getValueByPath(jsonData[rowIndex], column);
+
+  // Get display value
+  const formatted = formatCellValue(currentValue);
+  const displayValue = formatted.text;
+
+  // Store original content
+  const originalContent = td.innerHTML;
+  const originalClass = td.className;
+
+  // Create input
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'cell-input';
+  input.value = displayValue;
+
+  // Replace cell content with input
+  td.innerHTML = '';
+  td.className = '';
+  td.appendChild(input);
+  input.focus();
+  input.select();
+
+  // Handle blur (save)
+  const saveEdit = () => {
+    const newValue = parseEditedValue(input.value, currentValue);
+    setValueByPath(jsonData[rowIndex], column, newValue);
+
+    // Re-render the cell
+    const newFormatted = formatCellValue(newValue);
+    td.innerHTML = escapeHtml(newFormatted.text);
+    td.className = newFormatted.className;
+    td.title = newFormatted.text;
+
+    // Update preview if we switch back
+    localStorage.setItem("jsonEditorData", JSON.stringify(jsonData));
+  };
+
+  // Handle cancel
+  const cancelEdit = () => {
+    td.innerHTML = originalContent;
+    td.className = originalClass;
+  };
+
+  input.addEventListener('blur', saveEdit);
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      input.blur();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      input.removeEventListener('blur', saveEdit);
+      cancelEdit();
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      input.blur();
+      // Move to next/previous cell
+      const cells = Array.from(document.querySelectorAll('td[data-column]'));
+      const currentIndex = cells.indexOf(td);
+      const nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+      if (cells[nextIndex]) {
+        startCellEdit(cells[nextIndex]);
+      }
+    }
+  });
+}
+
+// Sort table data by column
+function sortTableData(column, direction) {
+  jsonData.sort((a, b) => {
+    const aVal = getValueByPath(a, column);
+    const bVal = getValueByPath(b, column);
+
+    // Handle undefined/null - sort to bottom
+    if (aVal === undefined || aVal === null) return 1;
+    if (bVal === undefined || bVal === null) return -1;
+
+    // Compare based on type
+    let comparison = 0;
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      comparison = aVal - bVal;
+    } else {
+      comparison = String(aVal).localeCompare(String(bVal));
+    }
+
+    return direction === 'asc' ? comparison : -comparison;
+  });
+
+  // Clear current index since order changed
+  currentIndex = 0;
+  selectedRows.clear();
+}
+
+// Add a new row to the table
+function addTableRow() {
+  if (jsonData.length === 0) {
+    // No data, can't determine structure
+    jsonData.push({});
+  } else {
+    // Clone structure from first object with empty/default values
+    const template = jsonData[0];
+    const newObj = createEmptyObject(template);
+    jsonData.push(newObj);
+  }
+
+  selectedRows.clear();
+  renderTableView();
+
+  // Scroll to bottom
+  const container = document.getElementById('table-container');
+  if (container) {
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+// Create empty object with same structure as template
+function createEmptyObject(template, depth = 0) {
+  const result = {};
+
+  for (const key in template) {
+    if (!template.hasOwnProperty(key)) continue;
+
+    const value = template[key];
+
+    if (value === null) {
+      result[key] = null;
+    } else if (Array.isArray(value)) {
+      result[key] = [];
+    } else if (typeof value === 'object') {
+      result[key] = createEmptyObject(value, depth + 1);
+    } else if (typeof value === 'number') {
+      result[key] = 0;
+    } else if (typeof value === 'boolean') {
+      result[key] = false;
+    } else {
+      result[key] = '';
+    }
+  }
+
+  return result;
+}
+
+// Delete selected rows
+function deleteSelectedRows() {
+  if (selectedRows.size === 0) {
+    alert('No rows selected. Click the checkboxes to select rows to delete.');
+    return;
+  }
+
+  if (selectedRows.size === jsonData.length) {
+    alert('Cannot delete all rows. At least one object must remain.');
+    return;
+  }
+
+  if (!confirm(`Delete ${selectedRows.size} selected row(s)?`)) {
+    return;
+  }
+
+  // Delete in reverse order to maintain indices
+  const indices = Array.from(selectedRows).sort((a, b) => b - a);
+  indices.forEach(idx => {
+    jsonData.splice(idx, 1);
+  });
+
+  selectedRows.clear();
+  currentIndex = 0;
+  sortColumn = null;
+  sortDirection = 'asc';
+
+  renderTableView();
+  localStorage.setItem("jsonEditorData", JSON.stringify(jsonData));
+}
+
+// Table font size control
+function changeTableFontSize(delta) {
+  const newSize = tableFontSize + delta;
+  if (newSize >= 10 && newSize <= 24) {
+    tableFontSize = newSize;
+    applyTableFontSize();
+    localStorage.setItem("jsonEditorTableFontSize", tableFontSize);
+  }
+}
+
+function applyTableFontSize() {
+  const table = document.querySelector('.data-table');
+  if (table) {
+    table.style.fontSize = tableFontSize + 'px';
+  }
+}
